@@ -10,7 +10,7 @@ CREATE TABLE IF NOT EXISTS Player (
 -- Gamedays Table
 CREATE TABLE IF NOT EXISTS Gameday (
     gameday_id SERIAL PRIMARY KEY,
-    date DATE NOT NULL
+    date TIMESTAMPTZ NOT NULL
 );
 
 -- Join Table for Player-Gameday relationship

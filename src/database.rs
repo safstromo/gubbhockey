@@ -1,3 +1,7 @@
+#![cfg(feature = "ssr")]
+
+use sqlx::*;
+
 static DB: std::sync::OnceLock<sqlx::PgPool> = std::sync::OnceLock::new();
 
 async fn create_pool() -> sqlx::PgPool {
@@ -15,7 +19,6 @@ async fn create_pool() -> sqlx::PgPool {
 
     pool
 }
-
 pub async fn init_db() -> Result<(), sqlx::Pool<sqlx::Postgres>> {
     DB.set(create_pool().await)
 }
