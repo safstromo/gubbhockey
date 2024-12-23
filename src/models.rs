@@ -11,7 +11,7 @@ pub struct Player {
     pub name: String,
     pub surname: String,
     pub email: String,
-    pub access_group: String,
+    pub access_group: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize, FromRow)]
