@@ -1,10 +1,12 @@
 #![cfg(feature = "ssr")]
 
+use leptos::logging::log;
 use sqlx::*;
 
 static DB: std::sync::OnceLock<sqlx::PgPool> = std::sync::OnceLock::new();
 
 async fn create_pool() -> sqlx::PgPool {
+    log!("Creating database pool");
     let database_url = std::env::var("DATABASE_URL").expect("no database url specify");
     let pool = sqlx::postgres::PgPoolOptions::new()
         .max_connections(4)
@@ -12,6 +14,7 @@ async fn create_pool() -> sqlx::PgPool {
         .await
         .expect("could not connect to database_url");
 
+    log!("Migrating DB");
     sqlx::migrate!()
         .run(&pool)
         .await
@@ -24,5 +27,6 @@ pub async fn init_db() -> Result<(), sqlx::Pool<sqlx::Postgres>> {
 }
 
 pub fn get_db<'a>() -> &'a sqlx::PgPool {
+    log!("Getting database pool");
     DB.get().expect("database unitialized")
 }
