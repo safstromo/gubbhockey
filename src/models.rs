@@ -81,6 +81,26 @@ pub async fn join_gameday(
     Ok(())
 }
 
+pub async fn leave_gameday(
+    pool: &PgPool,
+    player: Player,
+    gameday: Gameday,
+) -> Result<(), sqlx::Error> {
+    sqlx::query!(
+        r#"
+        DELETE FROM player_gameday
+        WHERE player_id = $1 AND gameday_id = $2
+        "#,
+        player.player_id,
+        gameday.gameday_id
+    )
+    .execute(pool)
+    .await?;
+
+    log!("Player: {:?} left gameday: {:?}", player, gameday);
+    Ok(())
+}
+
 pub async fn get_next_5_gamedays(pool: &PgPool) -> Result<Vec<Gameday>, sqlx::Error> {
     let results = sqlx::query_as!(
         Gameday,
