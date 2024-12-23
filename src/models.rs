@@ -80,3 +80,50 @@ pub async fn join_gameday(
     log!("Player: {:?} joined: {:?}", player, gameday);
     Ok(())
 }
+
+pub async fn get_next_5_gamedays(pool: &PgPool) -> Result<Vec<Gameday>, sqlx::Error> {
+    let results = sqlx::query_as!(
+        Gameday,
+        r#"
+        SELECT gameday_id, date
+        FROM gameday
+        WHERE date >= NOW()
+        ORDER BY date ASC
+        LIMIT 5
+        "#
+    )
+    .fetch_all(pool)
+    .await?;
+
+    Ok(results)
+}
+
+pub async fn get_players_by_gameday(
+    pool: &PgPool,
+    gameday_id: i32,
+) -> Result<Vec<Player>, sqlx::Error> {
+    let players = sqlx::query_as!(
+        Player,
+        r#"
+        SELECT 
+            p.player_id,
+            p.name,
+            p.surname,
+            p.email,
+            p.access_group
+        FROM 
+            Player p
+        JOIN 
+            Player_Gameday pg ON p.player_id = pg.player_id
+        JOIN 
+            Gameday g ON pg.gameday_id = g.gameday_id
+        WHERE 
+            g.gameday_id = $1
+        "#,
+        gameday_id
+    )
+    .fetch_all(pool)
+    .await?;
+
+    Ok(players)
+}
