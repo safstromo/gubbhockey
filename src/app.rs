@@ -63,7 +63,7 @@ fn HomePage() -> impl IntoView {
             <h1 class="text-4xl">"Falkenbergs Gubbhockey"</h1>
             <div class="card flex-row items-center justify-around bg-base-100 shadow-xl border w-11/12">
                 <DateCard />
-                <div class="flex flex-col justify-evenly">
+                <div class="flex flex-col items-center justify-evenly">
                     <TimeCard />
                     <NumPlayers />
                 </div>
