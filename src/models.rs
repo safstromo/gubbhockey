@@ -1,11 +1,13 @@
 #![cfg(feature = "ssr")]
+use crate::database::get_db;
 use leptos::logging::log;
+use leptos::prelude::ServerFnError;
+use leptos::server;
 use serde::{Deserialize, Serialize};
 use sqlx::types::chrono::Utc;
 use sqlx::FromRow;
-use sqlx::PgPool;
 
-#[derive(Debug, Serialize, Deserialize, FromRow)]
+#[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
 pub struct Player {
     pub player_id: i32,
     pub name: String,
@@ -14,19 +16,20 @@ pub struct Player {
     pub access_group: Option<String>,
 }
 
-#[derive(Debug, Serialize, Deserialize, FromRow)]
+#[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
 pub struct Gameday {
     pub gameday_id: i32,
     pub date: sqlx::types::chrono::DateTime<Utc>,
 }
 
+#[server]
 pub async fn insert_player(
-    pool: &PgPool,
-    name: &str,
-    surname: &str,
-    email: &str,
-) -> Result<(), sqlx::Error> {
-    sqlx::query!(
+    name: String,
+    surname: String,
+    email: String,
+) -> Result<(), ServerFnError> {
+    let pool = get_db();
+    match sqlx::query!(
         r#"
         INSERT INTO player (name, surname, email, access_group)
         VALUES ($1, $2, $3, $4)
@@ -37,17 +40,25 @@ pub async fn insert_player(
         "user"
     )
     .execute(pool)
-    .await?;
-
-    log!("User inserted successfully! {:?}", name);
-    Ok(())
+    .await
+    {
+        Ok(_) => {
+            log!("User inserted successfully! {:?}", name);
+            Ok(())
+        }
+        Err(e) => {
+            log!("Database error: {:?}", e);
+            Err(ServerFnError::ServerError(
+                "Failed to create player.".to_string(),
+            ))
+        }
+    }
 }
 
-pub async fn insert_gameday(
-    pool: &PgPool,
-    date: sqlx::types::chrono::DateTime<Utc>,
-) -> Result<(), sqlx::Error> {
-    sqlx::query!(
+#[server]
+pub async fn insert_gameday(date: sqlx::types::chrono::DateTime<Utc>) -> Result<(), ServerFnError> {
+    let pool = get_db();
+    match sqlx::query!(
         r#"
         INSERT INTO gameday (date)
         VALUES ($1)
@@ -55,18 +66,25 @@ pub async fn insert_gameday(
         date,
     )
     .execute(pool)
-    .await?;
-
-    log!("Date inserted successfully! {:?}", date);
-    Ok(())
+    .await
+    {
+        Ok(_) => {
+            log!("Date inserted successfully! {:?}", date);
+            Ok(())
+        }
+        Err(e) => {
+            log!("Database error: {:?}", e);
+            Err(ServerFnError::ServerError(
+                "Failed to create gameday.".to_string(),
+            ))
+        }
+    }
 }
 
-pub async fn join_gameday(
-    pool: &PgPool,
-    player: Player,
-    gameday: Gameday,
-) -> Result<(), sqlx::Error> {
-    sqlx::query!(
+#[server]
+pub async fn join_gameday(player: Player, gameday: Gameday) -> Result<(), ServerFnError> {
+    let pool = get_db();
+    match sqlx::query!(
         r#"
         INSERT INTO player_gameday (player_id, gameday_id)
         VALUES ($1, $2)
@@ -75,18 +93,25 @@ pub async fn join_gameday(
         gameday.gameday_id
     )
     .execute(pool)
-    .await?;
-
-    log!("Player: {:?} joined: {:?}", player, gameday);
-    Ok(())
+    .await
+    {
+        Ok(_) => {
+            log!("Player: {:?} joined: {:?}", player, gameday);
+            Ok(())
+        }
+        Err(e) => {
+            log!("Database error: {:?}", e);
+            Err(ServerFnError::ServerError(
+                "Failed to add player to gameday.".to_string(),
+            ))
+        }
+    }
 }
 
-pub async fn leave_gameday(
-    pool: &PgPool,
-    player: Player,
-    gameday: Gameday,
-) -> Result<(), sqlx::Error> {
-    sqlx::query!(
+#[server]
+pub async fn leave_gameday(player: Player, gameday: Gameday) -> Result<(), ServerFnError> {
+    let pool = get_db();
+    match sqlx::query!(
         r#"
         DELETE FROM player_gameday
         WHERE player_id = $1 AND gameday_id = $2
@@ -95,14 +120,25 @@ pub async fn leave_gameday(
         gameday.gameday_id
     )
     .execute(pool)
-    .await?;
-
-    log!("Player: {:?} left gameday: {:?}", player, gameday);
-    Ok(())
+    .await
+    {
+        Ok(_) => {
+            log!("Player: {:?} left gameday: {:?}", player, gameday);
+            Ok(())
+        }
+        Err(e) => {
+            log!("Database error: {:?}", e);
+            Err(ServerFnError::ServerError(
+                "Failed to remove player from gameday.".to_string(),
+            ))
+        }
+    }
 }
 
-pub async fn get_next_5_gamedays(pool: &PgPool) -> Result<Vec<Gameday>, sqlx::Error> {
-    let results = sqlx::query_as!(
+#[server]
+pub async fn get_next_5_gamedays() -> Result<Vec<Gameday>, ServerFnError> {
+    let pool = get_db();
+    match sqlx::query_as!(
         Gameday,
         r#"
         SELECT gameday_id, date
@@ -113,16 +149,25 @@ pub async fn get_next_5_gamedays(pool: &PgPool) -> Result<Vec<Gameday>, sqlx::Er
         "#
     )
     .fetch_all(pool)
-    .await?;
-
-    Ok(results)
+    .await
+    {
+        Ok(results) => {
+            log!("Successfully got next 5 gamedays");
+            Ok(results)
+        }
+        Err(e) => {
+            log!("Database error: {:?}", e);
+            Err(ServerFnError::ServerError(
+                "Failed to get the next 5 gamedays.".to_string(),
+            ))
+        }
+    }
 }
 
-pub async fn get_players_by_gameday(
-    pool: &PgPool,
-    gameday_id: i32,
-) -> Result<Vec<Player>, sqlx::Error> {
-    let players = sqlx::query_as!(
+#[server]
+pub async fn get_players_by_gameday(gameday_id: i32) -> Result<Vec<Player>, ServerFnError> {
+    let pool = get_db();
+    match sqlx::query_as!(
         Player,
         r#"
         SELECT 
@@ -143,7 +188,17 @@ pub async fn get_players_by_gameday(
         gameday_id
     )
     .fetch_all(pool)
-    .await?;
-
-    Ok(players)
+    .await
+    {
+        Ok(players) => {
+            log!("Successfully got players connected to {:?}", gameday_id);
+            Ok(players)
+        }
+        Err(e) => {
+            log!("Database error: {:?}", e);
+            Err(ServerFnError::ServerError(
+                "Failed to get players connected to gameday.".to_string(),
+            ))
+        }
+    }
 }
