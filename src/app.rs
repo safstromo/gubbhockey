@@ -6,7 +6,8 @@ use leptos_router::{
 };
 
 use crate::components::{
-    date_card::DateCard, join_button::JoinButton, num_players::NumPlayers, time_card::TimeCard,
+    date_card::DateCard, date_picker::DatePicker, join_button::JoinButton, num_players::NumPlayers,
+    time_card::TimeCard,
 };
 
 pub fn shell(options: LeptosOptions) -> impl IntoView {
@@ -69,6 +70,7 @@ fn HomePage() -> impl IntoView {
                 </div>
                 <JoinButton />
             </div>
+            <DatePicker />
         </div>
     }
 }
