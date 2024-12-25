@@ -1,4 +1,10 @@
-use leptos::{logging::log, prelude::*};
+#[cfg(feature = "ssr")]
+use crate::models::insert_gameday;
+#[cfg(feature = "ssr")]
+use chrono::{NaiveDate, NaiveDateTime, NaiveTime};
+#[cfg(feature = "ssr")]
+use leptos::logging::log;
+use leptos::prelude::*;
 use serde::{Deserialize, Serialize};
 
 #[component]
@@ -38,5 +44,21 @@ struct InputDate {
 #[server]
 async fn add_date(input_date: InputDate) -> Result<(), ServerFnError> {
     log!("Date submit: {:?}", input_date);
+
+    // Parse date and time
+    let date = NaiveDate::parse_from_str(&input_date.date, "%Y-%m-%d")?;
+    let start_time = NaiveTime::parse_from_str(&input_date.start, "%H:%M")?;
+    let end_time = NaiveTime::parse_from_str(&input_date.end, "%H:%M")?;
+
+    // Combine date and time into NaiveDateTime
+    let start_datetime = NaiveDateTime::new(date, start_time);
+    let end_datetime = NaiveDateTime::new(date, end_time);
+    log!(
+        "Parsed NaiveStart: {:?}, NaiveEnd: {:?}",
+        start_datetime,
+        end_datetime
+    );
+
+    insert_gameday(start_datetime.and_utc(), end_datetime.and_utc()).await?;
     Ok(())
 }

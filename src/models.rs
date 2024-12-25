@@ -19,7 +19,8 @@ pub struct Player {
 #[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
 pub struct Gameday {
     pub gameday_id: i32,
-    pub date: sqlx::types::chrono::DateTime<Utc>,
+    pub start_date: sqlx::types::chrono::DateTime<Utc>,
+    pub end_date: sqlx::types::chrono::DateTime<Utc>,
 }
 
 #[server]
@@ -56,20 +57,28 @@ pub async fn insert_player(
 }
 
 #[server]
-pub async fn insert_gameday(date: sqlx::types::chrono::DateTime<Utc>) -> Result<(), ServerFnError> {
+pub async fn insert_gameday(
+    start_date: sqlx::types::chrono::DateTime<Utc>,
+    end_date: sqlx::types::chrono::DateTime<Utc>,
+) -> Result<(), ServerFnError> {
     let pool = get_db();
     match sqlx::query!(
         r#"
-        INSERT INTO gameday (date)
-        VALUES ($1)
+        INSERT INTO gameday (start_date, end_date)
+        VALUES ($1, $2)
         "#,
-        date,
+        start_date,
+        end_date
     )
     .execute(pool)
     .await
     {
         Ok(_) => {
-            log!("Date inserted successfully! {:?}", date);
+            log!(
+                "Date inserted successfully! Start{:?}, End:{:?}",
+                start_date,
+                end_date
+            );
             Ok(())
         }
         Err(e) => {
@@ -141,10 +150,10 @@ pub async fn get_next_5_gamedays() -> Result<Vec<Gameday>, ServerFnError> {
     match sqlx::query_as!(
         Gameday,
         r#"
-        SELECT gameday_id, date
+        SELECT gameday_id, start_date, end_date
         FROM gameday
-        WHERE date >= NOW()
-        ORDER BY date ASC
+        WHERE start_date >= NOW()
+        ORDER BY start_date ASC
         LIMIT 5
         "#
     )

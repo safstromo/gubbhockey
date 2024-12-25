@@ -4,13 +4,14 @@ CREATE TABLE IF NOT EXISTS Player (
     name VARCHAR(50) NOT NULL,
     surname VARCHAR(50) NOT NULL,
     email VARCHAR(100) UNIQUE NOT NULL,
-    access_group VARCHAR(20) NOT NULL,
+    access_group VARCHAR(20) NOT NULL
 );
 
 -- Gamedays Table
 CREATE TABLE IF NOT EXISTS Gameday (
     gameday_id SERIAL PRIMARY KEY,
-    date TIMESTAMPTZ NOT NULL
+    start_date TIMESTAMPTZ NOT NULL,
+    end_date TIMESTAMPTZ NOT NULL
 );
 
 -- Join Table for Player-Gameday relationship
