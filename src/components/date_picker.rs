@@ -7,6 +7,7 @@ use leptos::logging::log;
 use leptos::prelude::*;
 use serde::{Deserialize, Serialize};
 
+//TODO: CSS and add multiple days
 #[component]
 pub fn DatePicker() -> impl IntoView {
     let submit = ServerAction::<AddDate>::new();

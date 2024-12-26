@@ -1,13 +1,16 @@
-#![cfg(feature = "ssr")]
+#[cfg(feature = "ssr")]
 use crate::database::get_db;
+use chrono::{DateTime, Utc};
+#[cfg(feature = "ssr")]
 use leptos::logging::log;
 use leptos::prelude::ServerFnError;
 use leptos::server;
 use serde::{Deserialize, Serialize};
-use sqlx::types::chrono::Utc;
+#[cfg(feature = "ssr")]
 use sqlx::FromRow;
 
-#[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "ssr", derive(FromRow))]
 pub struct Player {
     pub player_id: i32,
     pub name: String,
@@ -16,11 +19,12 @@ pub struct Player {
     pub access_group: Option<String>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "ssr", derive(FromRow))]
 pub struct Gameday {
     pub gameday_id: i32,
-    pub start_date: sqlx::types::chrono::DateTime<Utc>,
-    pub end_date: sqlx::types::chrono::DateTime<Utc>,
+    pub start_date: DateTime<Utc>,
+    pub end_date: DateTime<Utc>,
 }
 
 #[server]
@@ -58,8 +62,8 @@ pub async fn insert_player(
 
 #[server]
 pub async fn insert_gameday(
-    start_date: sqlx::types::chrono::DateTime<Utc>,
-    end_date: sqlx::types::chrono::DateTime<Utc>,
+    start_date: DateTime<Utc>,
+    end_date: DateTime<Utc>,
 ) -> Result<(), ServerFnError> {
     let pool = get_db();
     match sqlx::query!(

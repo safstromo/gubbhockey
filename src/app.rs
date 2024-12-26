@@ -5,10 +5,9 @@ use leptos_router::{
     StaticSegment,
 };
 
-use crate::components::{
-    date_card::DateCard, date_picker::DatePicker, join_button::JoinButton, num_players::NumPlayers,
-    time_card::TimeCard,
-};
+use crate::components::{date_picker::DatePicker, gameday_card::GamedayCard};
+
+use crate::models::get_next_5_gamedays;
 
 pub fn shell(options: LeptosOptions) -> impl IntoView {
     view! {
@@ -62,14 +61,22 @@ fn HomePage() -> impl IntoView {
         <div class="flex flex-col min-h-screen w-full items-center">
 
             <h1 class="text-4xl">"Falkenbergs Gubbhockey"</h1>
-            <div class="card flex-row items-center justify-around bg-base-100 shadow-xl border w-11/12">
-                <DateCard />
-                <div class="flex flex-col items-center justify-evenly">
-                    <TimeCard />
-                    <NumPlayers />
-                </div>
-                <JoinButton />
-            </div>
+            <Await future=get_next_5_gamedays() let:gamedays>
+                <ul class="flex flex-col items-center w-11/12">
+                    {gamedays
+                        .clone()
+                        .unwrap()
+                        .into_iter()
+                        .map(|day| {
+                            view! {
+                                <li class="my-2">
+                                    <GamedayCard gameday=day />
+                                </li>
+                            }
+                        })
+                        .collect_view()}
+                </ul>
+            </Await>
             <DatePicker />
         </div>
     }
