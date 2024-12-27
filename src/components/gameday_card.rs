@@ -10,11 +10,11 @@ use crate::{
 #[component]
 pub fn GamedayCard(gameday: Gameday) -> impl IntoView {
     view! {
-        <div class="card flex-row items-center justify-around bg-base-100 shadow-xl border ">
+        <div class="card flex-row items-center justify-around bg-base-100 shadow-xl border">
             <DateCard start=gameday.start_date />
             <div class="flex flex-col items-center justify-evenly">
                 <TimeCard start=gameday.start_date end=gameday.end_date />
-                <NumPlayers />
+                <NumPlayers num_players=14 />
             </div>
             <JoinButton />
         </div>

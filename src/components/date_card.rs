@@ -16,7 +16,7 @@ pub fn DateCard(start: DateTime<Utc>) -> impl IntoView {
     };
 
     view! {
-        <div class="flex m-2 w-30 h-20">
+        <div class="flex m-2">
             <div class="flex-col w-full items-center content-center ">
                 <p class="text-center font-bold">{day}</p>
                 <p class="text-center text-3xl font-bold">{date}</p>
