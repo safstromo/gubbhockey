@@ -1,3 +1,4 @@
+pub mod auth_page;
 pub mod date_card;
 pub mod date_picker;
 pub mod gameday_card;

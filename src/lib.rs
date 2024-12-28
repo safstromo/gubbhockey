@@ -1,4 +1,5 @@
 pub mod app;
+pub mod auth;
 mod components;
 pub mod database;
 pub mod models;

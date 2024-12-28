@@ -27,6 +27,15 @@ pub struct Gameday {
     pub end_date: DateTime<Utc>,
 }
 
+#[derive(Debug, Serialize, Deserialize)]
+#[cfg_attr(feature = "ssr", derive(FromRow))]
+pub struct PkceStore {
+    pub id: i32,                   // Unique identifier for the entry
+    pub csrf_token: String,        // CSRF token for validation
+    pub pkce_verifier: String,     // PKCE verifier
+    pub created_at: DateTime<Utc>, // Timestamp when the entry was created
+    pub expires_at: DateTime<Utc>, // Expiration timestamp
+}
 #[server]
 pub async fn insert_player(
     name: String,
@@ -212,6 +221,66 @@ pub async fn get_players_by_gameday(gameday_id: i32) -> Result<Vec<Player>, Serv
             Err(ServerFnError::ServerError(
                 "Failed to get players connected to gameday.".to_string(),
             ))
+        }
+    }
+}
+
+#[server]
+pub async fn store_pkce_verifier(
+    csrf_token: String,
+    pkce_verifier: String,
+) -> Result<(), ServerFnError> {
+    let pool = get_db();
+
+    // Calculate expiration (15 minutes)
+    let expires_at = Utc::now() + chrono::Duration::minutes(15);
+
+    match sqlx::query!(
+        "INSERT INTO pkce_store (csrf_token, pkce_verifier, created_at, expires_at)
+         VALUES ($1, $2, NOW(), $3)
+         ON CONFLICT (csrf_token) DO NOTHING",
+        csrf_token,
+        pkce_verifier,
+        expires_at
+    )
+    .execute(pool)
+    .await
+    {
+        Ok(_) => {
+            log!("Successfully stored PKCE verifier and CSRF token.");
+            Ok(())
+        }
+        Err(e) => {
+            // Log detailed error in development
+            log!("Database error: {:?}", e);
+            Err(ServerFnError::ServerError(format!(
+                "Failed to insert tokens: {:?}",
+                e
+            )))
+        }
+    }
+}
+
+#[server]
+pub async fn get_pkce_verifier(csrf_token: String) -> Result<Option<PkceStore>, ServerFnError> {
+    let pool = get_db();
+    match sqlx::query_as::<_, PkceStore>(
+        "SELECT * FROM pkce_store WHERE csrf_token = $1 AND expires_at > NOW()",
+    )
+    .bind(csrf_token)
+    .fetch_optional(pool)
+    .await
+    {
+        Ok(pkce) => {
+            log!("Successfully got Pkcestore.");
+            Ok(pkce)
+        }
+        Err(e) => {
+            log!("Database error: {:?}", e);
+            Err(ServerFnError::ServerError(format!(
+                "Failed to get tokens: {:?}",
+                e
+            )))
         }
     }
 }

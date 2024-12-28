@@ -22,3 +22,14 @@ CREATE TABLE IF NOT EXISTS Player_Gameday (
     FOREIGN KEY (player_id) REFERENCES Player(player_id) ON DELETE CASCADE,
     FOREIGN KEY (gameday_id) REFERENCES Gameday(gameday_id) ON DELETE CASCADE
 );
+
+CREATE TABLE pkce_store (
+    id SERIAL PRIMARY KEY, 
+    csrf_token TEXT NOT NULL,                     -- CSRF token associated with the request
+    pkce_verifier TEXT NOT NULL,                  -- PKCE verifier value
+    created_at TIMESTAMPTZ DEFAULT NOW(),           -- Timestamp of creation
+    expires_at TIMESTAMPTZ NOT NULL                 -- Expiration timestamp
+);
+
+-- Index to quickly look up by CSRF token
+CREATE UNIQUE INDEX idx_csrf_token ON pkce_store (csrf_token);
