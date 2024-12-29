@@ -1,5 +1,7 @@
 use std::env;
 
+use cookie::{time::Duration, Cookie};
+use http::{header, HeaderValue};
 use leptos::{logging::log, prelude::*, task::spawn_local};
 use leptos_router::hooks::use_query_map;
 use oauth2::{
@@ -7,8 +9,11 @@ use oauth2::{
     ClientSecret, PkceCodeVerifier, RedirectUrl, TokenUrl,
 };
 use serde::{Deserialize, Serialize};
+use uuid::Uuid;
 
-use crate::models::{get_pkce_verifier, get_player_by_email, insert_player, UserInfo};
+use crate::models::{
+    get_pkce_verifier, get_player_by_email, insert_player, insert_session, UserInfo,
+};
 use oauth2::TokenResponse;
 
 #[component]
@@ -67,15 +72,37 @@ async fn set_loggin_session(csrf_token: String, id_token: String) -> Result<(), 
             .await?;
 
         log!("userinfo{:?}", userinfo);
+        let response = expect_context::<leptos_axum::ResponseOptions>();
 
         if let Some(player) = get_player_by_email(userinfo.email.clone()).await? {
             log!("player exist{:?}", player);
+            let session = insert_session(player.player_id).await?;
+            let cookie = create_cookie(session);
+            if let Ok(cookie) = HeaderValue::from_str(&cookie.to_string()) {
+                response.insert_header(header::SET_COOKIE, cookie);
+            }
         } else {
             let player = insert_player(userinfo).await?;
             log!("player inserted: {:?}", player);
+            let session = insert_session(player.player_id).await?;
+            let cookie = create_cookie(session);
+            if let Ok(cookie) = HeaderValue::from_str(&cookie.to_string()) {
+                response.insert_header(header::SET_COOKIE, cookie);
+            }
         }
 
-        //TODO: Create session for user and set sessionid in cookie
+        leptos_axum::redirect("/");
     }
     Ok(())
+}
+
+fn create_cookie(uuid: Uuid) -> Cookie<'static> {
+    let cookie: Cookie = Cookie::build(("session_id", uuid.to_string()))
+        .path("/")
+        .secure(true)
+        .http_only(true)
+        .max_age(Duration::days(1))
+        .same_site(cookie::SameSite::Lax)
+        .build();
+    cookie
 }

@@ -9,7 +9,6 @@ use leptos_router::{
     hooks::use_query_map,
     path, StaticSegment,
 };
-use oauth2::{basic::BasicClient, PkceCodeVerifier};
 
 use crate::models::get_next_5_gamedays;
 
@@ -63,7 +62,6 @@ pub fn App() -> impl IntoView {
 /// Renders the home page of your application.
 #[component]
 fn HomePage() -> impl IntoView {
-    let query = use_query_map();
     view! {
         <div class="flex flex-col min-h-screen w-full items-center">
 
@@ -95,26 +93,7 @@ fn HomePage() -> impl IntoView {
             >
                 "Logga in"
             </button>
-            <button
-                on:click=move |_| {
-                    let token = query.read().get("code");
-                    spawn_local(async {
-                        if let Some(token) = token {
-                            let _ = printquery(token).await;
-                        }
-                    });
-                }
-                class="btn btn-info w-30 h-10"
-            >
-                "printquery"
-            </button>
-
             <DatePicker />
         </div>
     }
-}
-
-pub async fn printquery(query: String) -> Result<(), ServerFnError> {
-    log!("{:?}", query);
-    Ok(())
 }
