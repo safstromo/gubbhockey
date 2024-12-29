@@ -8,15 +8,25 @@ use leptos::server;
 use serde::{Deserialize, Serialize};
 #[cfg(feature = "ssr")]
 use sqlx::FromRow;
+use uuid::Uuid;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[cfg_attr(feature = "ssr", derive(FromRow))]
 pub struct Player {
     pub player_id: i32,
     pub name: String,
-    pub surname: String,
+    pub given_name: String,
+    pub family_name: String,
     pub email: String,
     pub access_group: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct UserInfo {
+    pub name: String,
+    pub given_name: String,
+    pub family_name: String,
+    pub email: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -37,27 +47,24 @@ pub struct PkceStore {
     pub expires_at: DateTime<Utc>, // Expiration timestamp
 }
 #[server]
-pub async fn insert_player(
-    name: String,
-    surname: String,
-    email: String,
-) -> Result<(), ServerFnError> {
+pub async fn insert_player(userinfo: UserInfo) -> Result<(), ServerFnError> {
     let pool = get_db();
     match sqlx::query!(
         r#"
-        INSERT INTO player (name, surname, email, access_group)
-        VALUES ($1, $2, $3, $4)
+        INSERT INTO player (name, given_name, family_name, email, access_group)
+        VALUES ($1, $2, $3, $4, $5)
         "#,
-        name,
-        surname,
-        email,
+        userinfo.name,
+        userinfo.given_name,
+        userinfo.family_name,
+        userinfo.email,
         "user"
     )
     .execute(pool)
     .await
     {
         Ok(_) => {
-            log!("User inserted successfully! {:?}", name);
+            log!("User inserted successfully! {:?}", userinfo.name);
             Ok(())
         }
         Err(e) => {
@@ -195,7 +202,8 @@ pub async fn get_players_by_gameday(gameday_id: i32) -> Result<Vec<Player>, Serv
         SELECT 
             p.player_id,
             p.name,
-            p.surname,
+            p.given_name,
+            p.family_name,
             p.email,
             p.access_group
         FROM 
@@ -281,6 +289,72 @@ pub async fn get_pkce_verifier(csrf_token: String) -> Result<Option<PkceStore>, 
                 "Failed to get tokens: {:?}",
                 e
             )))
+        }
+    }
+}
+
+#[server]
+pub async fn insert_session(player_id: i32) -> Result<Uuid, ServerFnError> {
+    let pool = get_db();
+    let session_id = uuid::Uuid::new_v4();
+    let expires_at = Utc::now() + chrono::Duration::minutes(15); // Set expiration to 15 minutes from now
+
+    match sqlx::query!(
+        r#"
+        INSERT INTO session (session_id, player_id, created_at, expires_at)
+        VALUES ($1, $2, NOW(), $3)
+        "#,
+        session_id,
+        player_id,
+        expires_at
+    )
+    .execute(pool)
+    .await
+    {
+        Ok(_) => {
+            log!(
+                "Session inserted successfully! SessionID: {:?}, PlayerID: {:?}, Expires: {:?}",
+                session_id,
+                player_id,
+                expires_at
+            );
+            Ok(session_id)
+        }
+        Err(e) => {
+            log!("Database error: {:?}", e);
+            Err(ServerFnError::ServerError(
+                "Failed to create session.".to_string(),
+            ))
+        }
+    }
+}
+
+#[server]
+pub async fn get_player_by_session(
+    session_id: uuid::Uuid,
+) -> Result<Option<Player>, ServerFnError> {
+    let pool = get_db();
+
+    match sqlx::query_as!(
+        Player,
+        r#"
+        SELECT p.player_id, p.name, p.given_name, p.family_name, p.email, p.access_group
+        FROM session s
+        JOIN player p ON s.player_id = p.player_id
+        WHERE s.session_id = $1
+          AND s.expires_at > NOW()
+        "#,
+        session_id
+    )
+    .fetch_optional(pool)
+    .await
+    {
+        Ok(player) => Ok(player), // Return player if found
+        Err(e) => {
+            log!("Database error: {:?}", e);
+            Err(ServerFnError::ServerError(
+                "Failed to fetch player.".to_string(),
+            ))
         }
     }
 }

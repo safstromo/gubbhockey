@@ -2,7 +2,8 @@
 CREATE TABLE IF NOT EXISTS Player (
     player_id SERIAL PRIMARY KEY,
     name VARCHAR(50) NOT NULL,
-    surname VARCHAR(50) NOT NULL,
+    given_name VARCHAR(50) NOT NULL,
+    family_name VARCHAR(50) NOT NULL,
     email VARCHAR(100) UNIQUE NOT NULL,
     access_group VARCHAR(20) NOT NULL
 );
@@ -33,3 +34,12 @@ CREATE TABLE pkce_store (
 
 -- Index to quickly look up by CSRF token
 CREATE UNIQUE INDEX idx_csrf_token ON pkce_store (csrf_token);
+
+CREATE TABLE IF NOT EXISTS Session (
+    session_id UUID PRIMARY KEY,                  -- Unique session ID
+    player_id INT NOT NULL,                       -- Associated player ID
+    created_at TIMESTAMPTZ DEFAULT NOW(),         -- Creation timestamp
+    expires_at TIMESTAMPTZ NOT NULL,              -- Expiration timestamp
+
+    FOREIGN KEY (player_id) REFERENCES Player(player_id) ON DELETE CASCADE
+);

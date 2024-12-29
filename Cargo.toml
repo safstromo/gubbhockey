@@ -23,6 +23,7 @@ sqlx = { version = "0.8.2", features = [
     "runtime-tokio-rustls",
     "postgres",
     "chrono",
+    "uuid",
 ], optional = true }
 serde = { version = "1.0", features = ["derive"] }
 chrono = { version = "0.4", features = ["serde"] }
