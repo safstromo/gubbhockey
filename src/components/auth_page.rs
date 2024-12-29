@@ -8,7 +8,7 @@ use oauth2::{
 };
 use serde::{Deserialize, Serialize};
 
-use crate::models::{get_pkce_verifier, insert_player, UserInfo};
+use crate::models::{get_pkce_verifier, get_player_by_email, insert_player, UserInfo};
 use oauth2::TokenResponse;
 
 #[component]
@@ -67,9 +67,13 @@ async fn set_loggin_session(csrf_token: String, id_token: String) -> Result<(), 
             .await?;
 
         log!("userinfo{:?}", userinfo);
-        insert_player(userinfo).await?;
-        //TODO: Check if user exist in DB
-        //If not add to DB
+
+        if let Some(player) = get_player_by_email(userinfo.email.clone()).await? {
+            log!("player exist{:?}", player);
+        } else {
+            let player = insert_player(userinfo).await?;
+            log!("player inserted: {:?}", player);
+        }
 
         //TODO: Create session for user and set sessionid in cookie
     }

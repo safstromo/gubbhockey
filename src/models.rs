@@ -46,13 +46,17 @@ pub struct PkceStore {
     pub created_at: DateTime<Utc>, // Timestamp when the entry was created
     pub expires_at: DateTime<Utc>, // Expiration timestamp
 }
+
 #[server]
-pub async fn insert_player(userinfo: UserInfo) -> Result<(), ServerFnError> {
+pub async fn insert_player(userinfo: UserInfo) -> Result<Player, ServerFnError> {
     let pool = get_db();
-    match sqlx::query!(
+
+    match sqlx::query_as!(
+        Player,
         r#"
         INSERT INTO player (name, given_name, family_name, email, access_group)
         VALUES ($1, $2, $3, $4, $5)
+        RETURNING player_id, name, given_name, family_name, email, access_group
         "#,
         userinfo.name,
         userinfo.given_name,
@@ -60,12 +64,12 @@ pub async fn insert_player(userinfo: UserInfo) -> Result<(), ServerFnError> {
         userinfo.email,
         "user"
     )
-    .execute(pool)
+    .fetch_one(pool)
     .await
     {
-        Ok(_) => {
-            log!("User inserted successfully! {:?}", userinfo.name);
-            Ok(())
+        Ok(player) => {
+            log!("User inserted successfully! {:?}", player.name);
+            Ok(player)
         }
         Err(e) => {
             log!("Database error: {:?}", e);
@@ -349,7 +353,33 @@ pub async fn get_player_by_session(
     .fetch_optional(pool)
     .await
     {
-        Ok(player) => Ok(player), // Return player if found
+        Ok(player) => Ok(player),
+        Err(e) => {
+            log!("Database error: {:?}", e);
+            Err(ServerFnError::ServerError(
+                "Failed to fetch player.".to_string(),
+            ))
+        }
+    }
+}
+
+#[server]
+pub async fn get_player_by_email(email: String) -> Result<Option<Player>, ServerFnError> {
+    let pool = get_db();
+
+    match sqlx::query_as!(
+        Player,
+        r#"
+        SELECT p.player_id, p.name, p.given_name, p.family_name, p.email, p.access_group
+        FROM player p
+        WHERE p.email = $1
+        "#,
+        email
+    )
+    .fetch_optional(pool)
+    .await
+    {
+        Ok(player) => Ok(player),
         Err(e) => {
             log!("Database error: {:?}", e);
             Err(ServerFnError::ServerError(
