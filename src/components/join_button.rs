@@ -12,7 +12,6 @@ pub fn JoinButton(
         <button
             class="btn btn-success h-20 m-2 flex-col"
             on:click=move |_| {
-                log!("joinbutton pressed {},{:?}", gameday_id, player);
                 if let Some(player) = &player {
                     if let Ok(player) = player {
                         let player_id = player.player_id;
