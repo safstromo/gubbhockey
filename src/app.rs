@@ -1,6 +1,7 @@
 use crate::{
     auth::{get_auth_url, validate_session},
     components::{auth_page::Auth, date_picker::DatePicker, gameday_card::GamedayCard},
+    models::Player,
 };
 use leptos::{logging::log, prelude::*, task::spawn_local};
 use leptos_meta::{provide_meta_context, Link, MetaTags, Stylesheet, Title};
@@ -62,15 +63,15 @@ pub fn App() -> impl IntoView {
 /// Renders the home page of your application.
 #[component]
 fn HomePage() -> impl IntoView {
-    create_effect(move |_| {
-        spawn_local(async {
-            let user = validate_session().await;
-            log!("{:?}", user);
-        });
+    let (logged_in, set_loggedin) = signal(false);
+    let player = Resource::new(|| (), |_| async move { validate_session().await });
+    Effect::new(move |_| {
+        if let Some(play) = player.get() {
+            set_loggedin.set(play.is_ok());
+        }
     });
     view! {
         <div class="flex flex-col min-h-screen w-full items-center">
-
             <h1 class="text-4xl text-center m-6">"Falkenbergs Gubbhockey"</h1>
             <h3 class="text-center text-xl">Speldagar</h3>
             <Await future=get_next_5_gamedays() let:gamedays>
@@ -82,7 +83,7 @@ fn HomePage() -> impl IntoView {
                         .map(|day| {
                             view! {
                                 <li class="my-2">
-                                    <GamedayCard gameday=day />
+                                    <GamedayCard gameday=day logged_in=logged_in />
                                 </li>
                             }
                         })

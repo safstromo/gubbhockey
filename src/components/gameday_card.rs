@@ -8,7 +8,7 @@ use crate::{
 };
 
 #[component]
-pub fn GamedayCard(gameday: Gameday) -> impl IntoView {
+pub fn GamedayCard(gameday: Gameday, logged_in: ReadSignal<bool>) -> impl IntoView {
     view! {
         <div class="card flex-row items-center justify-around bg-base-100 shadow-xl border">
             <DateCard start=gameday.start_date />
@@ -16,7 +16,7 @@ pub fn GamedayCard(gameday: Gameday) -> impl IntoView {
                 <TimeCard start=gameday.start_date end=gameday.end_date />
                 <NumPlayers num_players=14 />
             </div>
-            <JoinButton />
+            <JoinButton logged_in=logged_in />
         </div>
     }
 }

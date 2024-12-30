@@ -54,28 +54,29 @@ pub async fn get_auth_url() -> Result<(), ServerFnError> {
 }
 
 #[server]
-pub async fn validate_session() -> Result<Option<Player>, ServerFnError> {
+pub async fn validate_session() -> Result<Player, ServerFnError> {
     if let Some(cookies) = extract::<Cookies>().await.ok() {
         if let Some(session_id) = cookies.get("session_id") {
             match Uuid::parse_str(session_id.value()) {
                 Ok(uuid) => match get_player_by_session(uuid).await? {
-                    Some(player) => return Ok(Some(player)),
+                    Some(player) => return Ok(player),
                     None => {
                         log!("No player with session {:?} found", uuid);
 
                         let opts = expect_context::<leptos_axum::ResponseOptions>();
                         opts.set_status(StatusCode::UNAUTHORIZED);
-                        return Ok(None);
+                        return Err(ServerFnError::ServerError("Unauthorized".to_string()));
                     }
                 },
                 Err(_) => {
                     log!("Invalid session_id: {:?}", session_id.value());
                     let opts = expect_context::<leptos_axum::ResponseOptions>();
                     opts.set_status(StatusCode::UNAUTHORIZED);
-                    return Ok(None);
+                    return Err(ServerFnError::ServerError("Unauthorized".to_string()));
                 }
             };
         }
     }
-    Ok(None)
+
+    return Err(ServerFnError::ServerError("Unauthorized".to_string()));
 }
