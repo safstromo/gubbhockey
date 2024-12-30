@@ -9,6 +9,7 @@ async fn main() {
     use leptos_axum::{generate_route_list, LeptosRoutes};
     extern crate dotenv;
     use dotenv::dotenv;
+    use tower_cookies::CookieManagerLayer;
 
     dotenv().ok();
 
@@ -25,6 +26,7 @@ async fn main() {
             let leptos_options = leptos_options.clone();
             move || shell(leptos_options.clone())
         })
+        .layer(CookieManagerLayer::new())
         .fallback(leptos_axum::file_and_error_handler(shell))
         .with_state(leptos_options);
 

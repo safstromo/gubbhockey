@@ -16,6 +16,7 @@ leptos_meta = { version = "0.7.2" }
 tokio = { version = "1", features = ["rt-multi-thread"], optional = true }
 tower = { version = "0.4", optional = true }
 tower-http = { version = "0.5", features = ["fs"], optional = true }
+tower-cookies = { version = "0.10", optional = true }
 wasm-bindgen = "=0.2.99"
 thiserror = "1"
 http = "1"
@@ -31,8 +32,7 @@ oauth2  ="4.4.2"
 uuid = { version = "1.11", features = ["v4", "serde"] }
 reqwest = { version = "0.12", features = ["json"], optional = true }
 dotenv = "0.15.0"
-cookie = "0.18"
-
+# cookie = { version = "0.18", optional = true }
 
 [features]
 hydrate = ["leptos/hydrate"]
@@ -41,6 +41,7 @@ ssr = [
     "dep:tokio",
     "dep:tower",
     "dep:tower-http",
+    "dep:tower-cookies",
     "dep:leptos_axum",
     "leptos/ssr",
     "leptos_meta/ssr",

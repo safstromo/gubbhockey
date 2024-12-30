@@ -1,6 +1,5 @@
 use std::env;
 
-use cookie::{time::Duration, Cookie};
 use http::{header, HeaderValue};
 use leptos::{logging::log, prelude::*, task::spawn_local};
 use leptos_router::hooks::use_query_map;
@@ -9,6 +8,10 @@ use oauth2::{
     ClientSecret, PkceCodeVerifier, RedirectUrl, TokenUrl,
 };
 use serde::{Deserialize, Serialize};
+#[cfg(feature = "ssr")]
+use tower_cookies::cookie::time::Duration;
+#[cfg(feature = "ssr")]
+use tower_cookies::cookie::{Cookie, SameSite};
 use uuid::Uuid;
 
 use crate::models::{
@@ -38,6 +41,7 @@ pub fn Auth() -> impl IntoView {
     }
 }
 
+//TODO: encrypt cookie
 #[server]
 async fn set_loggin_session(csrf_token: String, id_token: String) -> Result<(), ServerFnError> {
     log!("Getting pkce verifier");
@@ -96,13 +100,14 @@ async fn set_loggin_session(csrf_token: String, id_token: String) -> Result<(), 
     Ok(())
 }
 
+#[cfg(feature = "ssr")]
 fn create_cookie(uuid: Uuid) -> Cookie<'static> {
     let cookie: Cookie = Cookie::build(("session_id", uuid.to_string()))
         .path("/")
         .secure(true)
         .http_only(true)
         .max_age(Duration::days(1))
-        .same_site(cookie::SameSite::Lax)
+        .same_site(SameSite::Strict)
         .build();
     cookie
 }

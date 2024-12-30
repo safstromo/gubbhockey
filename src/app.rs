@@ -1,5 +1,5 @@
 use crate::{
-    auth::get_auth_url,
+    auth::{get_auth_url, validate_session},
     components::{auth_page::Auth, date_picker::DatePicker, gameday_card::GamedayCard},
 };
 use leptos::{logging::log, prelude::*, task::spawn_local};
@@ -62,6 +62,12 @@ pub fn App() -> impl IntoView {
 /// Renders the home page of your application.
 #[component]
 fn HomePage() -> impl IntoView {
+    create_effect(move |_| {
+        spawn_local(async {
+            let user = validate_session().await;
+            log!("{:?}", user);
+        });
+    });
     view! {
         <div class="flex flex-col min-h-screen w-full items-center">
 
