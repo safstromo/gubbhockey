@@ -70,6 +70,7 @@ fn HomePage() -> impl IntoView {
             set_loggedin.set(play.is_ok());
         }
     });
+    provide_context(player);
     view! {
         <div class="flex flex-col min-h-screen w-full items-center">
             <h1 class="text-4xl text-center m-6">"Falkenbergs Gubbhockey"</h1>
@@ -83,7 +84,11 @@ fn HomePage() -> impl IntoView {
                         .map(|day| {
                             view! {
                                 <li class="my-2">
-                                    <GamedayCard gameday=day logged_in=logged_in />
+                                    <GamedayCard
+                                        gameday=day
+                                        logged_in=logged_in
+                                        player=player.get()
+                                    />
                                 </li>
                             }
                         })

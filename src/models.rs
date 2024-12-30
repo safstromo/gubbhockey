@@ -115,21 +115,21 @@ pub async fn insert_gameday(
 }
 
 #[server]
-pub async fn join_gameday(player: Player, gameday: Gameday) -> Result<(), ServerFnError> {
+pub async fn join_gameday(player_id: i32, gameday_id: i32) -> Result<(), ServerFnError> {
     let pool = get_db();
     match sqlx::query!(
         r#"
         INSERT INTO player_gameday (player_id, gameday_id)
         VALUES ($1, $2)
         "#,
-        player.player_id,
-        gameday.gameday_id
+        player_id,
+        gameday_id
     )
     .execute(pool)
     .await
     {
         Ok(_) => {
-            log!("Player: {:?} joined: {:?}", player, gameday);
+            log!("Player: {:?} joined: {:?}", player_id, gameday_id);
             Ok(())
         }
         Err(e) => {

@@ -4,11 +4,15 @@ use crate::{
     components::{
         date_card::DateCard, join_button::JoinButton, num_players::NumPlayers, time_card::TimeCard,
     },
-    models::Gameday,
+    models::{Gameday, Player},
 };
 
 #[component]
-pub fn GamedayCard(gameday: Gameday, logged_in: ReadSignal<bool>) -> impl IntoView {
+pub fn GamedayCard(
+    gameday: Gameday,
+    logged_in: ReadSignal<bool>,
+    player: Option<Result<Player, ServerFnError>>,
+) -> impl IntoView {
     view! {
         <div class="card flex-row items-center justify-around bg-base-100 shadow-xl border">
             <DateCard start=gameday.start_date />
@@ -16,7 +20,7 @@ pub fn GamedayCard(gameday: Gameday, logged_in: ReadSignal<bool>) -> impl IntoVi
                 <TimeCard start=gameday.start_date end=gameday.end_date />
                 <NumPlayers num_players=14 />
             </div>
-            <JoinButton logged_in=logged_in />
+            <JoinButton logged_in=logged_in gameday_id=gameday.gameday_id player=player />
         </div>
     }
 }
