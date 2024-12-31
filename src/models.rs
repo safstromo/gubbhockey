@@ -390,7 +390,6 @@ pub async fn store_pkce_verifier(
             Ok(())
         }
         Err(e) => {
-            // Log detailed error in development
             log!("Database error: {:?}", e);
             Err(ServerFnError::ServerError(format!(
                 "Failed to insert tokens: {:?}",
@@ -485,6 +484,33 @@ pub async fn get_player_by_session(
             log!("Database error: {:?}", e);
             Err(ServerFnError::ServerError(
                 "Failed to fetch player.".to_string(),
+            ))
+        }
+    }
+}
+
+#[server]
+pub async fn delete_session(session_id: uuid::Uuid) -> Result<(), ServerFnError> {
+    let pool = get_db();
+
+    match sqlx::query!(
+        r#"
+        DELETE FROM session
+        WHERE session_id = $1
+        "#,
+        session_id
+    )
+    .execute(pool)
+    .await
+    {
+        Ok(_) => {
+            log!("Session {:?} deleted successfully.", session_id);
+            Ok(())
+        }
+        Err(e) => {
+            log!("Database error: {:?}", e);
+            Err(ServerFnError::ServerError(
+                "Failed to delete session.".to_string(),
             ))
         }
     }

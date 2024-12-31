@@ -8,7 +8,7 @@ use oauth2::{
 use std::env;
 use uuid::Uuid;
 
-use crate::models::{get_player_by_session, store_pkce_verifier, Player};
+use crate::models::{delete_session, get_player_by_session, store_pkce_verifier, Player};
 
 #[cfg(feature = "ssr")]
 use leptos_axum::extract;
@@ -79,4 +79,24 @@ pub async fn validate_session() -> Result<Player, ServerFnError> {
     }
 
     return Err(ServerFnError::ServerError("Unauthorized".to_string()));
+}
+
+#[server]
+pub async fn logout() -> Result<(), ServerFnError> {
+    use tower_cookies::Cookie;
+    if let Some(cookies) = extract::<Cookies>().await.ok() {
+        if let Some(session_id) = cookies.get("session_id") {
+            match Uuid::parse_str(session_id.value()) {
+                Ok(uuid) => {
+                    let _ = delete_session(uuid).await;
+                }
+                Err(_) => {
+                    return Err(ServerFnError::ServerError("No session_id".to_string()));
+                }
+            };
+        }
+    }
+    let logout_url = env::var("OAUTH_LOGOUT_URL")?;
+    leptos_axum::redirect(&logout_url);
+    Ok(())
 }

@@ -1,6 +1,9 @@
 use crate::{
     auth::{get_auth_url, validate_session},
-    components::{auth_page::Auth, date_picker::DatePicker, gameday_card::GamedayCard},
+    components::{
+        auth_page::Auth, date_picker::DatePicker, gameday_card::GamedayCard,
+        login_button::LoginButton, logout_button::LogoutButton,
+    },
     models::{get_gamedays_by_player, Gameday, Player},
 };
 use leptos::{logging::log, prelude::*, task::spawn_local};
@@ -88,8 +91,12 @@ fn HomePage() -> impl IntoView {
         }
     });
     view! {
-        <div class="flex flex-col min-h-screen w-full items-center">
-            <h1 class="text-4xl text-center m-6">"Falkenbergs Gubbhockey"</h1>
+        <div class="flex flex-col min-h-screen w-full items-center relative">
+            <div class="absolute top-4 right-4">
+                <LoginButton />
+                <LogoutButton />
+            </div>
+            <h1 class="text-4xl text-center mt-14 mb-6">"Falkenbergs Gubbhockey"</h1>
             <h3 class="text-center text-xl">Speldagar</h3>
             <Transition fallback=move || view! { <p>"Loading..."</p> }>
                 <ul class="flex flex-col items-center w-11/12">
@@ -112,17 +119,7 @@ fn HomePage() -> impl IntoView {
                             .collect_view()
                     })}
                 </ul>
-                <button
-                    on:click=move |_| {
-                        spawn_local(async {
-                            let _ = get_auth_url().await;
-                        });
-                    }
-                    class="btn btn-info w-30 h-10"
-                >
-                    "Logga in"
-                </button>
-                <DatePicker />
+            // <DatePicker />
             </Transition>
         </div>
     }
