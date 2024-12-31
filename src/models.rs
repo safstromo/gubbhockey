@@ -143,21 +143,21 @@ pub async fn join_gameday(player_id: i32, gameday_id: i32) -> Result<(), ServerF
 }
 
 #[server]
-pub async fn leave_gameday(player: Player, gameday: Gameday) -> Result<(), ServerFnError> {
+pub async fn leave_gameday(player_id: i32, gameday_id: i32) -> Result<(), ServerFnError> {
     let pool = get_db();
     match sqlx::query!(
         r#"
         DELETE FROM player_gameday
         WHERE player_id = $1 AND gameday_id = $2
         "#,
-        player.player_id,
-        gameday.gameday_id
+        player_id,
+        gameday_id
     )
     .execute(pool)
     .await
     {
         Ok(_) => {
-            log!("Player: {:?} left gameday: {:?}", player, gameday);
+            log!("Player: {:?} left gameday: {:?}", player_id, gameday_id);
             Ok(())
         }
         Err(e) => {

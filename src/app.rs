@@ -1,7 +1,7 @@
 use crate::{
     auth::{get_auth_url, validate_session},
     components::{auth_page::Auth, date_picker::DatePicker, gameday_card::GamedayCard},
-    models::Player,
+    models::{get_gamedays_by_player, Gameday, Player},
 };
 use leptos::{logging::log, prelude::*, task::spawn_local};
 use leptos_meta::{provide_meta_context, Link, MetaTags, Stylesheet, Title};
@@ -65,16 +65,22 @@ pub fn App() -> impl IntoView {
 fn HomePage() -> impl IntoView {
     let (logged_in, set_loggedin) = signal(false);
     let (player_id, set_player_id) = signal(0);
+    let (gamedays_joined, set_gamedays_joined) = signal(Vec::new());
     let player = Resource::new(|| (), |_| async move { validate_session().await });
     Effect::new(move |_| {
         if let Some(player_data) = player.get() {
             if let Ok(data) = player_data {
                 set_loggedin.set(true);
                 set_player_id.set(data.player_id);
+
+                spawn_local(async move {
+                    if let Ok(gamedays) = get_gamedays_by_player(data.player_id).await {
+                        set_gamedays_joined.set(gamedays);
+                    }
+                });
             }
         }
     });
-    provide_context(player);
     view! {
         <div class="flex flex-col min-h-screen w-full items-center">
             <h1 class="text-4xl text-center m-6">"Falkenbergs Gubbhockey"</h1>
@@ -89,9 +95,10 @@ fn HomePage() -> impl IntoView {
                             view! {
                                 <li class="my-2">
                                     <GamedayCard
-                                        gameday=day
                                         logged_in=logged_in
-                                        player=player.get()
+                                        gamedays_joined=gamedays_joined
+                                        set_gamedays_joined=set_gamedays_joined
+                                        gameday=day
                                         player_id=player_id
                                     />
                                 </li>
