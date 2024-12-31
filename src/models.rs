@@ -29,7 +29,7 @@ pub struct UserInfo {
     pub email: String,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[cfg_attr(feature = "ssr", derive(FromRow))]
 pub struct Gameday {
     pub gameday_id: i32,

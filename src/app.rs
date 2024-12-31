@@ -67,6 +67,12 @@ fn HomePage() -> impl IntoView {
     let (player_id, set_player_id) = signal(0);
     let (gamedays_joined, set_gamedays_joined) = signal(Vec::new());
     let player = Resource::new(|| (), |_| async move { validate_session().await });
+
+    let gamedays = Resource::new(
+        move || gamedays_joined.get(),
+        |_| async move { get_next_5_gamedays().await },
+    );
+
     Effect::new(move |_| {
         if let Some(player_data) = player.get() {
             if let Ok(data) = player_data {
@@ -85,39 +91,39 @@ fn HomePage() -> impl IntoView {
         <div class="flex flex-col min-h-screen w-full items-center">
             <h1 class="text-4xl text-center m-6">"Falkenbergs Gubbhockey"</h1>
             <h3 class="text-center text-xl">Speldagar</h3>
-            <Await future=get_next_5_gamedays() let:gamedays>
+            <Transition fallback=move || view! { <p>"Loading..."</p> }>
                 <ul class="flex flex-col items-center w-11/12">
-                    {gamedays
-                        .clone()
-                        .unwrap()
-                        .into_iter()
-                        .map(|day| {
-                            view! {
-                                <li class="my-2">
-                                    <GamedayCard
-                                        logged_in=logged_in
-                                        gamedays_joined=gamedays_joined
-                                        set_gamedays_joined=set_gamedays_joined
-                                        gameday=day
-                                        player_id=player_id
-                                    />
-                                </li>
-                            }
-                        })
-                        .collect_view()}
+                    {move || Suspend::new(async move {
+                        let days = gamedays.await.expect("No gamedays found");
+                        days.into_iter()
+                            .map(|day| {
+                                view! {
+                                    <li class="my-2">
+                                        <GamedayCard
+                                            logged_in=logged_in
+                                            gamedays_joined=gamedays_joined
+                                            set_gamedays_joined=set_gamedays_joined
+                                            gameday=day
+                                            player_id=player_id
+                                        />
+                                    </li>
+                                }
+                            })
+                            .collect_view()
+                    })}
                 </ul>
-            </Await>
-            <button
-                on:click=move |_| {
-                    spawn_local(async {
-                        let _ = get_auth_url().await;
-                    });
-                }
-                class="btn btn-info w-30 h-10"
-            >
-                "Logga in"
-            </button>
-            <DatePicker />
+                <button
+                    on:click=move |_| {
+                        spawn_local(async {
+                            let _ = get_auth_url().await;
+                        });
+                    }
+                    class="btn btn-info w-30 h-10"
+                >
+                    "Logga in"
+                </button>
+                <DatePicker />
+            </Transition>
         </div>
     }
 }
