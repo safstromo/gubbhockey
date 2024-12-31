@@ -35,6 +35,7 @@ pub struct Gameday {
     pub gameday_id: i32,
     pub start_date: DateTime<Utc>,
     pub end_date: DateTime<Utc>,
+    pub player_count: Option<i64>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -174,18 +175,29 @@ pub async fn get_next_5_gamedays() -> Result<Vec<Gameday>, ServerFnError> {
     match sqlx::query_as!(
         Gameday,
         r#"
-        SELECT gameday_id, start_date, end_date
-        FROM gameday
-        WHERE start_date >= NOW()
-        ORDER BY start_date ASC
-        LIMIT 5
+        SELECT 
+            g.gameday_id, 
+            g.start_date, 
+            g.end_date,
+            COUNT(pg.player_id) as player_count -- Count players per gameday
+        FROM 
+            gameday g
+        LEFT JOIN 
+            player_gameday pg ON g.gameday_id = pg.gameday_id
+        WHERE 
+            g.start_date >= NOW() 
+        GROUP BY 
+            g.gameday_id, g.start_date, g.end_date
+        ORDER BY 
+            g.start_date ASC
+        LIMIT 5         
         "#
     )
     .fetch_all(pool)
     .await
     {
         Ok(results) => {
-            log!("Successfully got next 5 gamedays");
+            log!("Successfully retrieved next 5 gamedays with player counts.");
             Ok(results)
         }
         Err(e) => {
@@ -268,46 +280,83 @@ pub async fn count_players_by_gameday(gameday_id: i32) -> Result<i64, ServerFnEr
     Ok(count.unwrap())
 }
 
-#[server]
-pub async fn get_gamedays_by_player(player_id: i32) -> Result<Vec<Gameday>, ServerFnError> {
-    let pool = get_db();
+// #[server]
+// pub async fn get_gamedays_by_player(player_id: i32) -> Result<Vec<Gameday>, ServerFnError> {
+//     let pool = get_db();
+//
+//     match sqlx::query_as!(
+//         Gameday,
+//         r#"
+//         SELECT
+//             g.gameday_id,
+//             g.start_date,
+//             g.end_date
+//         FROM
+//             Gameday g
+//         JOIN
+//             Player_Gameday pg ON g.gameday_id = pg.gameday_id
+//         WHERE
+//             pg.player_id = $1
+//         ORDER BY
+//             g.start_date DESC
+//         "#,
+//         player_id
+//     )
+//     .fetch_all(pool)
+//     .await
+//     {
+//         Ok(gamedays) => {
+//             log!(
+//                 "Successfully retrieved {} gamedays for player {}",
+//                 gamedays.len(),
+//                 player_id
+//             );
+//             Ok(gamedays)
+//         }
+//         Err(e) => {
+//             log!(
+//                 "Database error while fetching gamedays for player {}: {:?}",
+//                 player_id,
+//                 e
+//             );
+//             Err(ServerFnError::from(e))
+//         }
+//     }
+// }
 
+#[server]
+pub async fn get_gamedays_with_player_count() -> Result<Vec<Gameday>, ServerFnError> {
+    let pool = get_db();
     match sqlx::query_as!(
         Gameday,
         r#"
         SELECT 
             g.gameday_id,
             g.start_date,
-            g.end_date
+            g.end_date,
+            COUNT(pg.player_id) as player_count
         FROM 
-            Gameday g
-        JOIN 
-            Player_Gameday pg ON g.gameday_id = pg.gameday_id
-        WHERE 
-            pg.player_id = $1
+            gameday g
+        LEFT JOIN 
+            player_gameday pg ON g.gameday_id = pg.gameday_id
+        GROUP BY 
+            g.gameday_id, g.start_date, g.end_date
         ORDER BY 
-            g.start_date DESC
-        "#,
-        player_id
+            g.start_date ASC
+        "#
     )
     .fetch_all(pool)
     .await
     {
         Ok(gamedays) => {
-            log!(
-                "Successfully retrieved {} gamedays for player {}",
-                gamedays.len(),
-                player_id
-            );
+            log!("Successfully retrieved gamedays with player counts.");
             Ok(gamedays)
         }
         Err(e) => {
-            log!(
-                "Database error while fetching gamedays for player {}: {:?}",
-                player_id,
-                e
-            );
-            Err(ServerFnError::from(e))
+            log!("Database error: {:?}", e);
+            Err(ServerFnError::ServerError(
+                "Failed to fetch gamedays with player counts.".to_string(),
+            ))
         }
     }
 }

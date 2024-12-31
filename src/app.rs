@@ -64,10 +64,14 @@ pub fn App() -> impl IntoView {
 #[component]
 fn HomePage() -> impl IntoView {
     let (logged_in, set_loggedin) = signal(false);
+    let (player_id, set_player_id) = signal(0);
     let player = Resource::new(|| (), |_| async move { validate_session().await });
     Effect::new(move |_| {
-        if let Some(play) = player.get() {
-            set_loggedin.set(play.is_ok());
+        if let Some(player_data) = player.get() {
+            if let Ok(data) = player_data {
+                set_loggedin.set(true);
+                set_player_id.set(data.player_id);
+            }
         }
     });
     provide_context(player);
@@ -88,6 +92,7 @@ fn HomePage() -> impl IntoView {
                                         gameday=day
                                         logged_in=logged_in
                                         player=player.get()
+                                        player_id=player_id
                                     />
                                 </li>
                             }
