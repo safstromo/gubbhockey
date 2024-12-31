@@ -93,8 +93,9 @@ fn HomePage() -> impl IntoView {
     view! {
         <div class="flex flex-col min-h-screen w-full items-center relative">
             <div class="absolute top-4 right-4">
-                <LoginButton />
-                <LogoutButton />
+                <Show when=move || { logged_in.get() } fallback=|| view! { <LoginButton /> }>
+                    <LogoutButton />
+                </Show>
             </div>
             <h1 class="text-4xl text-center mt-14 mb-6">"Falkenbergs Gubbhockey"</h1>
             <h3 class="text-center text-xl">Speldagar</h3>
