@@ -179,7 +179,7 @@ pub async fn get_next_5_gamedays() -> Result<Vec<Gameday>, ServerFnError> {
             g.gameday_id, 
             g.start_date, 
             g.end_date,
-            COUNT(pg.player_id) as player_count -- Count players per gameday
+            COUNT(pg.player_id) as player_count 
         FROM 
             gameday g
         LEFT JOIN 
@@ -280,49 +280,52 @@ pub async fn count_players_by_gameday(gameday_id: i32) -> Result<i64, ServerFnEr
     Ok(count.unwrap())
 }
 
-// #[server]
-// pub async fn get_gamedays_by_player(player_id: i32) -> Result<Vec<Gameday>, ServerFnError> {
-//     let pool = get_db();
-//
-//     match sqlx::query_as!(
-//         Gameday,
-//         r#"
-//         SELECT
-//             g.gameday_id,
-//             g.start_date,
-//             g.end_date
-//         FROM
-//             Gameday g
-//         JOIN
-//             Player_Gameday pg ON g.gameday_id = pg.gameday_id
-//         WHERE
-//             pg.player_id = $1
-//         ORDER BY
-//             g.start_date DESC
-//         "#,
-//         player_id
-//     )
-//     .fetch_all(pool)
-//     .await
-//     {
-//         Ok(gamedays) => {
-//             log!(
-//                 "Successfully retrieved {} gamedays for player {}",
-//                 gamedays.len(),
-//                 player_id
-//             );
-//             Ok(gamedays)
-//         }
-//         Err(e) => {
-//             log!(
-//                 "Database error while fetching gamedays for player {}: {:?}",
-//                 player_id,
-//                 e
-//             );
-//             Err(ServerFnError::from(e))
-//         }
-//     }
-// }
+#[server]
+pub async fn get_gamedays_by_player(player_id: i32) -> Result<Vec<Gameday>, ServerFnError> {
+    let pool = get_db();
+
+    match sqlx::query_as!(
+        Gameday,
+        r#"
+        SELECT
+            g.gameday_id,
+            g.start_date,
+            g.end_date,
+            COUNT(pg.player_id) as player_count
+        FROM
+            Gameday g
+        LEFT JOIN 
+            player_gameday pg ON g.gameday_id = pg.gameday_id
+        WHERE
+            pg.player_id = $1
+        GROUP BY 
+            g.gameday_id, g.start_date, g.end_date
+        ORDER BY
+            g.start_date DESC        
+        "#,
+        player_id
+    )
+    .fetch_all(pool)
+    .await
+    {
+        Ok(gamedays) => {
+            log!(
+                "Successfully retrieved {} gamedays for player {}",
+                gamedays.len(),
+                player_id
+            );
+            Ok(gamedays)
+        }
+        Err(e) => {
+            log!(
+                "Database error while fetching gamedays for player {}: {:?}",
+                player_id,
+                e
+            );
+            Err(ServerFnError::from(e))
+        }
+    }
+}
 
 #[server]
 pub async fn get_gamedays_with_player_count() -> Result<Vec<Gameday>, ServerFnError> {
