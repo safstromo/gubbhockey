@@ -238,6 +238,81 @@ pub async fn get_players_by_gameday(gameday_id: i32) -> Result<Vec<Player>, Serv
 }
 
 #[server]
+pub async fn count_players_by_gameday(gameday_id: i32) -> Result<i64, ServerFnError> {
+    let pool = get_db();
+
+    let count = sqlx::query_scalar!(
+        r#"
+        SELECT 
+            COUNT(*)
+        FROM 
+            Player p
+        JOIN 
+            Player_Gameday pg ON p.player_id = pg.player_id
+        JOIN 
+            Gameday g ON pg.gameday_id = g.gameday_id
+        WHERE 
+            g.gameday_id = $1
+        "#,
+        gameday_id
+    )
+    .fetch_one(pool)
+    .await
+    .unwrap_or(Some(0));
+
+    log!(
+        "Counted {} players for gameday {}",
+        count.unwrap(),
+        gameday_id
+    );
+    Ok(count.unwrap())
+}
+
+#[server]
+pub async fn get_gamedays_by_player(player_id: i32) -> Result<Vec<Gameday>, ServerFnError> {
+    let pool = get_db();
+
+    match sqlx::query_as!(
+        Gameday,
+        r#"
+        SELECT 
+            g.gameday_id,
+            g.start_date,
+            g.end_date
+        FROM 
+            Gameday g
+        JOIN 
+            Player_Gameday pg ON g.gameday_id = pg.gameday_id
+        WHERE 
+            pg.player_id = $1
+        ORDER BY 
+            g.start_date DESC
+        "#,
+        player_id
+    )
+    .fetch_all(pool)
+    .await
+    {
+        Ok(gamedays) => {
+            log!(
+                "Successfully retrieved {} gamedays for player {}",
+                gamedays.len(),
+                player_id
+            );
+            Ok(gamedays)
+        }
+        Err(e) => {
+            log!(
+                "Database error while fetching gamedays for player {}: {:?}",
+                player_id,
+                e
+            );
+            Err(ServerFnError::from(e))
+        }
+    }
+}
+
+#[server]
 pub async fn store_pkce_verifier(
     csrf_token: String,
     pkce_verifier: String,

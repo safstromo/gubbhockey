@@ -4,7 +4,7 @@ use crate::{
     components::{
         date_card::DateCard, join_button::JoinButton, num_players::NumPlayers, time_card::TimeCard,
     },
-    models::{get_players_by_gameday, Gameday, Player},
+    models::{count_players_by_gameday, Gameday, Player},
 };
 
 #[component]
@@ -14,13 +14,15 @@ pub fn GamedayCard(
     player: Option<Result<Player, ServerFnError>>,
 ) -> impl IntoView {
     let (count, set_count) = signal(0);
-    let players = Resource::new(
+    let players_count = Resource::new(
         || (),
-        move |_| async move { get_players_by_gameday(gameday.gameday_id).await },
+        move |_| async move { count_players_by_gameday(gameday.gameday_id).await },
     );
     Effect::new(move |_| {
-        if let Some(players) = players.get() {
-            set_count.set(players.unwrap_or_else(|_| Vec::new()).len());
+        if let Some(data) = players_count.get() {
+            if let Ok(count) = data {
+                set_count.set(count);
+            }
         }
     });
 
