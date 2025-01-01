@@ -1,22 +1,27 @@
+#[cfg(feature = "ssr")]
 use http::StatusCode;
 use leptos::prelude::*;
-use leptos::{logging::log, prelude::ServerFnError, server};
-use oauth2::{
-    basic::BasicClient, url::Url, AuthUrl, ClientId, ClientSecret, CsrfToken, PkceCodeChallenge,
-    RedirectUrl, Scope, TokenUrl,
-};
+use leptos::{prelude::ServerFnError, server};
 use std::env;
+#[cfg(feature = "ssr")]
 use uuid::Uuid;
 
-use crate::models::{delete_session, get_player_by_session, store_pkce_verifier, Player};
+use crate::models::Player;
+#[cfg(feature = "ssr")]
+use crate::models::{delete_session, get_player_by_session, store_pkce_verifier};
+#[cfg(feature = "ssr")]
+use leptos::logging::log;
 
 #[cfg(feature = "ssr")]
 use leptos_axum::extract;
-#[cfg(feature = "ssr")]
-use tower_cookies::Cookies;
 
 #[server]
 pub async fn get_auth_url() -> Result<(), ServerFnError> {
+    use oauth2::{
+        basic::BasicClient, AuthUrl, ClientId, ClientSecret, CsrfToken, PkceCodeChallenge,
+        RedirectUrl, Scope, TokenUrl,
+    };
+
     // Create an OAuth2 client by specifying the client ID, client secret, authorization URL and
     // token URL.
     let client = BasicClient::new(
@@ -55,6 +60,7 @@ pub async fn get_auth_url() -> Result<(), ServerFnError> {
 
 #[server]
 pub async fn validate_session() -> Result<Player, ServerFnError> {
+    use tower_cookies::Cookies;
     if let Some(cookies) = extract::<Cookies>().await.ok() {
         if let Some(session_id) = cookies.get("session_id") {
             match Uuid::parse_str(session_id.value()) {
@@ -83,7 +89,7 @@ pub async fn validate_session() -> Result<Player, ServerFnError> {
 
 #[server]
 pub async fn logout() -> Result<(), ServerFnError> {
-    use tower_cookies::Cookie;
+    use tower_cookies::Cookies;
     if let Some(cookies) = extract::<Cookies>().await.ok() {
         if let Some(session_id) = cookies.get("session_id") {
             match Uuid::parse_str(session_id.value()) {

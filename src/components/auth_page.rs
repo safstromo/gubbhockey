@@ -1,29 +1,34 @@
 use std::env;
 
+#[cfg(feature = "ssr")]
 use http::{header, HeaderValue};
-use leptos::{logging::log, prelude::*, task::spawn_local};
+use leptos::{prelude::*, task::spawn_local};
 use leptos_router::hooks::use_query_map;
+#[cfg(feature = "ssr")]
 use oauth2::{
     basic::BasicClient, reqwest::async_http_client, AuthUrl, AuthorizationCode, ClientId,
     ClientSecret, PkceCodeVerifier, RedirectUrl, TokenUrl,
 };
-use serde::{Deserialize, Serialize};
 #[cfg(feature = "ssr")]
 use tower_cookies::cookie::time::Duration;
 #[cfg(feature = "ssr")]
 use tower_cookies::cookie::{Cookie, SameSite};
+
+#[cfg(feature = "ssr")]
 use uuid::Uuid;
 
+#[cfg(feature = "ssr")]
 use crate::models::{
     get_pkce_verifier, get_player_by_email, insert_player, insert_session, UserInfo,
 };
+#[cfg(feature = "ssr")]
 use oauth2::TokenResponse;
 
 #[component]
 pub fn Auth() -> impl IntoView {
     let query = use_query_map();
 
-    create_effect(move |_| {
+    Effect::new(move |_| {
         let id_token = query.read().get("code");
         let csrf_token = query.read().get("state");
         if id_token.is_some() && csrf_token.is_some() {
@@ -44,6 +49,8 @@ pub fn Auth() -> impl IntoView {
 //TODO: encrypt cookie
 #[server]
 async fn set_loggin_session(csrf_token: String, id_token: String) -> Result<(), ServerFnError> {
+    use leptos::logging::log;
+
     log!("Getting pkce verifier");
     if let Some(pkcestore) = get_pkce_verifier(csrf_token).await? {
         log!("Creating Oath client");

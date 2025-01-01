@@ -1,16 +1,15 @@
 use crate::{
-    auth::{get_auth_url, validate_session},
+    auth::validate_session,
     components::{
-        auth_page::Auth, date_picker::DatePicker, gameday_card::GamedayCard,
-        login_button::LoginButton, logout_button::LogoutButton,
+        auth_page::Auth, gameday_card::GamedayCard, login_button::LoginButton,
+        logout_button::LogoutButton,
     },
-    models::{get_gamedays_by_player, Gameday, Player},
+    models::get_gamedays_by_player,
 };
-use leptos::{logging::log, prelude::*, task::spawn_local};
+use leptos::{prelude::*, task::spawn_local};
 use leptos_meta::{provide_meta_context, Link, MetaTags, Stylesheet, Title};
 use leptos_router::{
     components::{Route, Router, Routes},
-    hooks::use_query_map,
     path, StaticSegment,
 };
 
