@@ -1,9 +1,8 @@
 #[cfg(feature = "ssr")]
 use crate::models::insert_gameday;
-use crate::models::Gameday;
 #[cfg(feature = "ssr")]
 use chrono::{NaiveDate, NaiveDateTime, NaiveTime};
-// #[cfg(feature = "ssr")]
+#[cfg(feature = "ssr")]
 use leptos::logging::log;
 use leptos::prelude::*;
 use serde::{Deserialize, Serialize};

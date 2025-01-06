@@ -8,7 +8,6 @@ use crate::{
 #[component]
 pub fn GamedayCreate(
     gameday: Gameday,
-    logged_in: ReadSignal<bool>,
     set_invalidate_gamedays: WriteSignal<bool>,
 ) -> impl IntoView {
     view! {
