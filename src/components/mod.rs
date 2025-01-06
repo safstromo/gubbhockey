@@ -2,6 +2,7 @@ pub mod auth_page;
 pub mod date_card;
 pub mod date_picker;
 pub mod gameday_card;
+pub mod gameday_create;
 pub mod join_button;
 pub mod leave_button;
 pub mod login_button;

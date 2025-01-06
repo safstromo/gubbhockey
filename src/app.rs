@@ -1,15 +1,15 @@
 use crate::{
     auth::validate_session,
     components::{
-        auth_page::Auth, gameday_card::GamedayCard, login_button::LoginButton,
-        logout_button::LogoutButton,
+        auth_page::Auth, date_picker::DatePicker, gameday_card::GamedayCard,
+        gameday_create::GamedayCreate, login_button::LoginButton, logout_button::LogoutButton,
     },
-    models::get_gamedays_by_player,
+    models::{get_all_gamedays, get_gamedays_by_player},
 };
 use leptos::{prelude::*, task::spawn_local};
 use leptos_meta::{provide_meta_context, Link, MetaTags, Stylesheet, Title};
 use leptos_router::{
-    components::{Route, Router, Routes},
+    components::{Route, Router, Routes, A},
     path, StaticSegment,
 };
 
@@ -55,6 +55,7 @@ pub fn App() -> impl IntoView {
                 <Routes fallback=|| "Page not found.".into_view()>
                     <Route path=StaticSegment("") view=HomePage />
 
+                    <Route path=path!("/create") view=CreatePage />
                     <Route path=path!("/auth") view=Auth />
                 </Routes>
             </main>
@@ -120,6 +121,66 @@ fn HomePage() -> impl IntoView {
                     })}
                 </ul>
             // <DatePicker />
+            </Transition>
+        </div>
+    }
+}
+
+#[component]
+fn CreatePage() -> impl IntoView {
+    let (logged_in, set_loggedin) = signal(false);
+    let (invalidate_gamedays, set_invalidate_gamedays) = signal(false);
+    let (player_id, set_player_id) = signal(0);
+    let player = Resource::new(|| (), |_| async move { validate_session().await });
+    let gamedays = Resource::new(|| (), |_| async move { get_all_gamedays().await });
+
+    Effect::new(move |_| {
+        if let Some(player_data) = player.get() {
+            if let Ok(data) = player_data {
+                set_loggedin.set(true);
+                set_player_id.set(data.player_id);
+            }
+        }
+    });
+
+    Effect::new(move || {
+        if invalidate_gamedays.get() {
+            gamedays.refetch();
+            set_invalidate_gamedays.set(false);
+        }
+    });
+
+    view! {
+        <div class="flex flex-col min-h-screen w-full items-center relative">
+            <div class="absolute top-4 right-4">
+                <Show when=move || { logged_in.get() } fallback=|| view! { <LoginButton /> }>
+                    <LogoutButton />
+                </Show>
+            </div>
+            <A href="/">
+                <h1 class="text-4xl text-center mt-14 mb-6">"Falkenbergs Gubbhockey"</h1>
+            </A>
+            <DatePicker set_invalidate_gamedays />
+            <Transition fallback=move || view! { <p>"Loading..."</p> }>
+                <h3 class="text-center text-xl mt-6">Alla Speldagar</h3>
+                <ul class="flex flex-col items-center w-11/12">
+                    {move || Suspend::new(async move {
+                        let days = gamedays.await.expect("No gamedays found");
+                        days.into_iter()
+                            .map(|day| {
+                                view! {
+                                    <li class="my-2">
+                                        <GamedayCreate
+                                            logged_in
+                                            gameday=day
+                                            set_invalidate_gamedays
+                                        />
+                                    </li>
+                                }
+                            })
+                            .collect_view()
+                    })}
+                </ul>
             </Transition>
         </div>
     }
