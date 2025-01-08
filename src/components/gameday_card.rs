@@ -18,7 +18,7 @@ pub fn GamedayCard(
 ) -> impl IntoView {
     view! {
         <div class="card flex-row items-center justify-around bg-base-100 shadow-xl border">
-            <DateCard start=gameday.start_date show_month=false />
+            <DateCard start=gameday.start_date show_month=true />
             <div class="flex flex-col items-center justify-evenly">
                 <TimeCard start=gameday.start_date end=gameday.end_date />
                 <NumPlayers num_players=gameday.player_count.unwrap_or(0) />

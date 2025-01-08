@@ -20,22 +20,20 @@ pub fn DatePicker(set_invalidate_gamedays: WriteSignal<bool>) -> impl IntoView {
     view! {
         <ActionForm action=submit>
             <div class="flex flex-col m-2">
-                <label for="input_date[date]" class="">
-                    Datum
-                </label>
-                <input type="date" required name="input_date[date]" />
-                <label for="input_date[start]" class="">
+                <label for="input_date[date]">Datum</label>
+                <input type="date" required name="input_date[date]" class="input input-bordered" />
+                <label for="input_date[start]" class="mt-2">
                     Start
                 </label>
-                <input type="time" required name="input_date[start]" />
-                <label for="input_date[end]" class="">
+                <input type="time" required name="input_date[start]" class="input input-bordered" />
+                <label for="input_date[end]" class="mt-2">
                     Slut
                 </label>
-                <input type="time" required name="input_date[end]" />
+                <input type="time" required name="input_date[end]" class="input input-bordered" />
+                <button class="btn btn-success mt-4" type="submit">
+                    Lägg till dag
+                </button>
             </div>
-            <button class="btn btn-success mt-2" type="submit">
-                Lägg till dag
-            </button>
         </ActionForm>
     }
 }
