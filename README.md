@@ -39,6 +39,7 @@ OAUTH_CLIENT_SECRET="secred"
 OAUTH_AUTH_URL="https://url.com/authorize"
 OAUTH_TOKEN_URL="https://url.com/oauth/token"
 OAUTH_REDIRECT_URL="http://localhost:3000/auth"
+OAUTH_LOGOUT_URL="https://url.com/logout"
 
 ## Running your project
 

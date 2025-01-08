@@ -114,7 +114,7 @@ fn create_cookie(uuid: Uuid) -> Cookie<'static> {
         .secure(true)
         .http_only(true)
         .max_age(Duration::days(1))
-        .same_site(SameSite::Strict)
+        .same_site(SameSite::None)
         .build();
     cookie
 }

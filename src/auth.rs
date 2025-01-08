@@ -88,7 +88,7 @@ pub async fn validate_session() -> Result<Player, ServerFnError> {
 }
 
 #[server]
-pub async fn validate_admin() -> Result<(), ServerFnError> {
+pub async fn validate_admin() -> Result<bool, ServerFnError> {
     use tower_cookies::Cookies;
     if let Some(cookies) = extract::<Cookies>().await.ok() {
         if let Some(session_id) = cookies.get("session_id") {
@@ -97,9 +97,7 @@ pub async fn validate_admin() -> Result<(), ServerFnError> {
                     Some(player) => {
                         if let Some(access_group) = player.access_group {
                             if access_group == "admin" {
-                                return Ok(());
-                            } else {
-                                return Err(ServerFnError::ServerError("Unauthorized".to_string()));
+                                return Ok(true);
                             }
                         }
                     }
@@ -108,19 +106,22 @@ pub async fn validate_admin() -> Result<(), ServerFnError> {
 
                         let opts = expect_context::<leptos_axum::ResponseOptions>();
                         opts.set_status(StatusCode::UNAUTHORIZED);
-                        return Err(ServerFnError::ServerError("Unauthorized".to_string()));
+                        leptos_axum::redirect("/");
+                        return Ok(false);
                     }
                 },
                 Err(_) => {
                     log!("Invalid session_id: {:?}", session_id.value());
                     let opts = expect_context::<leptos_axum::ResponseOptions>();
                     opts.set_status(StatusCode::UNAUTHORIZED);
-                    return Err(ServerFnError::ServerError("Unauthorized".to_string()));
+                    leptos_axum::redirect("/");
+                    return Ok(false);
                 }
             };
         }
     }
 
+    leptos_axum::redirect("/");
     return Err(ServerFnError::ServerError("Unauthorized".to_string()));
 }
 
