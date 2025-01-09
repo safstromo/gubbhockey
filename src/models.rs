@@ -1,7 +1,5 @@
 #[cfg(feature = "ssr")]
-use crate::auth::user_from_session;
-#[cfg(feature = "ssr")]
-use crate::auth::validate_admin;
+use crate::auth::{user_from_session, validate_admin};
 #[cfg(feature = "ssr")]
 use crate::database::get_db;
 use chrono::{DateTime, Utc};
@@ -150,34 +148,43 @@ pub async fn join_gameday(gameday_id: i32) -> Result<(), ServerFnError> {
                 }
             }
         }
-        Err(err) => return Err(err),
+        Err(err) => Err(err),
     }
 }
 
 #[server]
-pub async fn leave_gameday(player_id: i32, gameday_id: i32) -> Result<(), ServerFnError> {
-    let pool = get_db();
-    match sqlx::query!(
-        r#"
+pub async fn leave_gameday(gameday_id: i32) -> Result<(), ServerFnError> {
+    match user_from_session().await {
+        Ok(user) => {
+            let pool = get_db();
+            match sqlx::query!(
+                r#"
         DELETE FROM player_gameday
         WHERE player_id = $1 AND gameday_id = $2
         "#,
-        player_id,
-        gameday_id
-    )
-    .execute(pool)
-    .await
-    {
-        Ok(_) => {
-            log!("Player: {:?} left gameday: {:?}", player_id, gameday_id);
-            Ok(())
+                user.player_id,
+                gameday_id
+            )
+            .execute(pool)
+            .await
+            {
+                Ok(_) => {
+                    log!(
+                        "Player: {:?} left gameday: {:?}",
+                        user.player_id,
+                        gameday_id
+                    );
+                    Ok(())
+                }
+                Err(e) => {
+                    log!("Database error: {:?}", e);
+                    Err(ServerFnError::ServerError(
+                        "Failed to remove player from gameday.".to_string(),
+                    ))
+                }
+            }
         }
-        Err(e) => {
-            log!("Database error: {:?}", e);
-            Err(ServerFnError::ServerError(
-                "Failed to remove player from gameday.".to_string(),
-            ))
-        }
+        Err(err) => Err(err),
     }
 }
 

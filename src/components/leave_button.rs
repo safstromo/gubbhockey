@@ -5,7 +5,6 @@ use crate::models::{leave_gameday, Gameday};
 #[component]
 pub fn LeaveButton(
     gameday_id: i32,
-    player_id: ReadSignal<i32>,
     gamedays_joined: ReadSignal<Vec<Gameday>>,
     set_gamedays_joined: WriteSignal<Vec<Gameday>>,
 ) -> impl IntoView {
@@ -14,7 +13,7 @@ pub fn LeaveButton(
             class="btn btn-error h-20 m-2 flex-col"
             on:click=move |_| {
                 spawn_local(async move {
-                    if leave_gameday(player_id.get_untracked(), gameday_id).await.is_ok() {
+                    if leave_gameday(gameday_id).await.is_ok() {
                         delete_joined(set_gamedays_joined, gamedays_joined, gameday_id);
                     }
                 });

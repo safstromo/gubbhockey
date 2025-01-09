@@ -38,7 +38,6 @@ pub fn GamedayCard(
             >
                 <LeaveButton
                     gameday_id=gameday.gameday_id
-                    player_id=player_id
                     gamedays_joined=gamedays_joined
                     set_gamedays_joined=set_gamedays_joined
                 />
