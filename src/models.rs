@@ -1,4 +1,6 @@
 #[cfg(feature = "ssr")]
+use crate::auth::validate_admin;
+#[cfg(feature = "ssr")]
 use crate::database::get_db;
 use chrono::{DateTime, Utc};
 #[cfg(feature = "ssr")]
@@ -86,6 +88,9 @@ pub async fn insert_gameday(
     start_date: DateTime<Utc>,
     end_date: DateTime<Utc>,
 ) -> Result<(), ServerFnError> {
+    if let Err(err) = validate_admin().await {
+        return Err(err);
+    }
     let pool = get_db();
     match sqlx::query!(
         r#"
@@ -100,7 +105,7 @@ pub async fn insert_gameday(
     {
         Ok(_) => {
             log!(
-                "Date inserted successfully! Start{:?}, End:{:?}",
+                "Date inserted successfully! Start:{:?}, End:{:?}",
                 start_date,
                 end_date
             );

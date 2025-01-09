@@ -1,5 +1,5 @@
 use crate::{
-    auth::{validate_admin, validate_session},
+    auth::{user_from_session, validate_admin},
     components::{
         auth_page::Auth, date_picker::DatePicker, gameday_card::GamedayCard,
         gameday_create::GamedayCreate, login_button::LoginButton, logout_button::LogoutButton,
@@ -70,7 +70,7 @@ fn HomePage() -> impl IntoView {
     let (is_admin, set_is_admin) = signal(false);
     let (player_id, set_player_id) = signal(0);
     let (gamedays_joined, set_gamedays_joined) = signal(Vec::new());
-    let player = Resource::new(|| (), |_| async move { validate_session().await });
+    let player = Resource::new(|| (), |_| async move { user_from_session().await });
     let admin_check = Resource::new(|| (), |_| async move { validate_admin().await });
 
     let gamedays = Resource::new(

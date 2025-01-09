@@ -59,8 +59,9 @@ pub async fn get_auth_url() -> Result<(), ServerFnError> {
 }
 
 #[server]
-pub async fn validate_session() -> Result<Player, ServerFnError> {
+pub async fn user_from_session() -> Result<Player, ServerFnError> {
     use tower_cookies::Cookies;
+    log!("Getting user from session");
     if let Some(cookies) = extract::<Cookies>().await.ok() {
         if let Some(session_id) = cookies.get("session_id") {
             match Uuid::parse_str(session_id.value()) {
@@ -84,11 +85,15 @@ pub async fn validate_session() -> Result<Player, ServerFnError> {
         }
     }
 
-    return Err(ServerFnError::ServerError("Unauthorized".to_string()));
+    log!("No session cookie found");
+    let opts = expect_context::<leptos_axum::ResponseOptions>();
+    opts.set_status(StatusCode::NOT_FOUND);
+    return Err(ServerFnError::ServerError("No user found".to_string()));
 }
 
 #[server]
 pub async fn validate_admin() -> Result<bool, ServerFnError> {
+    log!("Validate admin session");
     use tower_cookies::Cookies;
     if let Some(cookies) = extract::<Cookies>().await.ok() {
         if let Some(session_id) = cookies.get("session_id") {
@@ -107,7 +112,7 @@ pub async fn validate_admin() -> Result<bool, ServerFnError> {
                         let opts = expect_context::<leptos_axum::ResponseOptions>();
                         opts.set_status(StatusCode::UNAUTHORIZED);
                         leptos_axum::redirect("/");
-                        return Ok(false);
+                        return Err(ServerFnError::ServerError("Unauthorized".to_string()));
                     }
                 },
                 Err(_) => {
@@ -115,13 +120,15 @@ pub async fn validate_admin() -> Result<bool, ServerFnError> {
                     let opts = expect_context::<leptos_axum::ResponseOptions>();
                     opts.set_status(StatusCode::UNAUTHORIZED);
                     leptos_axum::redirect("/");
-                    return Ok(false);
+                    return Err(ServerFnError::ServerError("Unauthorized".to_string()));
                 }
             };
         }
     }
 
-    leptos_axum::redirect("/");
+    log!("No session cookie found");
+    let opts = expect_context::<leptos_axum::ResponseOptions>();
+    opts.set_status(StatusCode::UNAUTHORIZED);
     return Err(ServerFnError::ServerError("Unauthorized".to_string()));
 }
 
