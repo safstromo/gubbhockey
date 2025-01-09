@@ -230,6 +230,10 @@ pub async fn get_next_5_gamedays() -> Result<Vec<Gameday>, ServerFnError> {
 
 #[server]
 pub async fn get_all_gamedays() -> Result<Vec<Gameday>, ServerFnError> {
+    if let Err(err) = validate_admin().await {
+        return Err(err);
+    }
+
     let pool = get_db();
     match sqlx::query_as!(
         Gameday,
@@ -269,6 +273,10 @@ pub async fn get_all_gamedays() -> Result<Vec<Gameday>, ServerFnError> {
 
 #[server]
 pub async fn get_players_by_gameday(gameday_id: i32) -> Result<Vec<Player>, ServerFnError> {
+    if let Err(err) = validate_admin().await {
+        return Err(err);
+    }
+
     let pool = get_db();
     match sqlx::query_as!(
         Player,
@@ -576,6 +584,10 @@ pub async fn delete_session(session_id: uuid::Uuid) -> Result<(), ServerFnError>
 
 #[server]
 pub async fn delete_gameday(gameday_id: i32) -> Result<(), ServerFnError> {
+    if let Err(err) = validate_admin().await {
+        return Err(err);
+    }
+
     let pool = get_db();
 
     match sqlx::query!(
