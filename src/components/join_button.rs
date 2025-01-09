@@ -14,7 +14,7 @@ pub fn JoinButton(
             class="btn btn-success h-20 m-2 flex-col"
             on:click=move |_| {
                 spawn_local(async move {
-                    if join_gameday(player_id.get_untracked(), gameday_id).await.is_ok() {
+                    if join_gameday(gameday_id).await.is_ok() {
                         add_joined(set_gamedays_joined, player_id.get_untracked()).await;
                     }
                 });

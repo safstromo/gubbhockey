@@ -1,4 +1,6 @@
 #[cfg(feature = "ssr")]
+use crate::auth::user_from_session;
+#[cfg(feature = "ssr")]
 use crate::auth::validate_admin;
 #[cfg(feature = "ssr")]
 use crate::database::get_db;
@@ -121,29 +123,34 @@ pub async fn insert_gameday(
 }
 
 #[server]
-pub async fn join_gameday(player_id: i32, gameday_id: i32) -> Result<(), ServerFnError> {
-    let pool = get_db();
-    match sqlx::query!(
-        r#"
+pub async fn join_gameday(gameday_id: i32) -> Result<(), ServerFnError> {
+    match user_from_session().await {
+        Ok(user) => {
+            let pool = get_db();
+            match sqlx::query!(
+                r#"
         INSERT INTO player_gameday (player_id, gameday_id)
         VALUES ($1, $2)
         "#,
-        player_id,
-        gameday_id
-    )
-    .execute(pool)
-    .await
-    {
-        Ok(_) => {
-            log!("Player: {:?} joined: {:?}", player_id, gameday_id);
-            Ok(())
+                user.player_id,
+                gameday_id
+            )
+            .execute(pool)
+            .await
+            {
+                Ok(_) => {
+                    log!("Player: {:?} joined: {:?}", user.player_id, gameday_id);
+                    Ok(())
+                }
+                Err(e) => {
+                    log!("Database error: {:?}", e);
+                    Err(ServerFnError::ServerError(
+                        "Failed to add player to gameday.".to_string(),
+                    ))
+                }
+            }
         }
-        Err(e) => {
-            log!("Database error: {:?}", e);
-            Err(ServerFnError::ServerError(
-                "Failed to add player to gameday.".to_string(),
-            ))
-        }
+        Err(err) => return Err(err),
     }
 }
 
