@@ -1,28 +1,11 @@
+use leptos::{prelude::*, task::spawn_local};
+use leptos_router::hooks::use_query_map;
 use std::env;
 
 #[cfg(feature = "ssr")]
-use http::{header, HeaderValue};
-use leptos::{prelude::*, task::spawn_local};
-use leptos_router::hooks::use_query_map;
-#[cfg(feature = "ssr")]
-use oauth2::{
-    basic::BasicClient, reqwest::async_http_client, AuthUrl, AuthorizationCode, ClientId,
-    ClientSecret, PkceCodeVerifier, RedirectUrl, TokenUrl,
-};
-#[cfg(feature = "ssr")]
-use tower_cookies::cookie::time::Duration;
-#[cfg(feature = "ssr")]
-use tower_cookies::cookie::{Cookie, SameSite};
-
+use tower_cookies::Cookie;
 #[cfg(feature = "ssr")]
 use uuid::Uuid;
-
-#[cfg(feature = "ssr")]
-use crate::models::{
-    get_pkce_verifier, get_player_by_email, insert_player, insert_session, UserInfo,
-};
-#[cfg(feature = "ssr")]
-use oauth2::TokenResponse;
 
 #[component]
 pub fn Auth() -> impl IntoView {
@@ -49,7 +32,15 @@ pub fn Auth() -> impl IntoView {
 //TODO: encrypt cookie
 #[server]
 async fn set_loggin_session(csrf_token: String, id_token: String) -> Result<(), ServerFnError> {
+    use crate::models::{
+        get_pkce_verifier, get_player_by_email, insert_player, insert_session, UserInfo,
+    };
+    use http::{header, HeaderValue};
     use leptos::logging::log;
+    use oauth2::{
+        basic::BasicClient, reqwest::async_http_client, AuthUrl, AuthorizationCode, ClientId,
+        ClientSecret, PkceCodeVerifier, RedirectUrl, TokenResponse, TokenUrl,
+    };
 
     log!("Getting pkce verifier");
     if let Some(pkcestore) = get_pkce_verifier(csrf_token).await? {
@@ -109,6 +100,7 @@ async fn set_loggin_session(csrf_token: String, id_token: String) -> Result<(), 
 
 #[cfg(feature = "ssr")]
 fn create_cookie(uuid: Uuid) -> Cookie<'static> {
+    use tower_cookies::cookie::{time::Duration, Cookie, SameSite};
     let cookie: Cookie = Cookie::build(("session_id", uuid.to_string()))
         .path("/")
         .secure(true)

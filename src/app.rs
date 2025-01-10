@@ -78,26 +78,23 @@ fn HomePage() -> impl IntoView {
     );
 
     Effect::new(move |_| {
-        if let Some(player_data) = player.get() {
-            if let Ok(_data) = player_data {
-                set_loggedin.set(true);
+        if let Some(Ok(_player_data)) = player.get() {
+            set_loggedin.set(true);
 
-                spawn_local(async move {
-                    if let Ok(gamedays) = get_gamedays_by_player().await {
-                        set_gamedays_joined.set(gamedays);
-                    }
-                });
-            }
+            spawn_local(async move {
+                if let Ok(gamedays) = get_gamedays_by_player().await {
+                    set_gamedays_joined.set(gamedays);
+                }
+            });
         }
     });
 
     Effect::new(move |_| {
-        if let Some(admin) = admin_check.get() {
-            if let Ok(check) = admin {
-                set_is_admin.set(check);
-            }
+        if let Some(Ok(admin)) = admin_check.get() {
+            set_is_admin.set(admin);
         }
     });
+
     view! {
         <div class="flex flex-col min-h-screen w-full items-center relative">
             <div class="absolute top-4 right-4">
