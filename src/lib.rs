@@ -3,6 +3,7 @@ pub mod auth;
 mod components;
 pub mod database;
 pub mod models;
+pub mod pages;
 
 #[cfg(feature = "hydrate")]
 #[wasm_bindgen::prelude::wasm_bindgen]

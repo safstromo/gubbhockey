@@ -9,7 +9,7 @@ use tower_cookies::Cookie;
 use crate::models::{Player, UserInfo};
 
 #[component]
-pub fn Auth() -> impl IntoView {
+pub fn AuthPage() -> impl IntoView {
     let query = use_query_map();
 
     Effect::new(move |_| {

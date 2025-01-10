@@ -1,10 +1,11 @@
-use crate::components::{auth_page::Auth, create_page::CreatePage, homepage::HomePage};
 use leptos::prelude::*;
 use leptos_meta::{provide_meta_context, Link, MetaTags, Stylesheet, Title};
 use leptos_router::{
     components::{Route, Router, Routes},
     path, StaticSegment,
 };
+
+use crate::pages::{auth_page::AuthPage, create_page::CreatePage, homepage::HomePage};
 
 pub fn shell(options: LeptosOptions) -> impl IntoView {
     view! {
@@ -29,7 +30,7 @@ pub fn App() -> impl IntoView {
     // Provides context that manages stylesheets, titles, meta tags, etc.
     provide_meta_context();
 
-    view! {
+    let website = view! {
         // injects a stylesheet into the document <head>
         // id=leptos means cargo-leptos will hot-reload this stylesheet
         <Stylesheet id="leptos" href="/pkg/gubbhockey.css" />
@@ -46,10 +47,11 @@ pub fn App() -> impl IntoView {
                 <Routes fallback=|| "Page not found.".into_view()>
                     <Route path=StaticSegment("") view=HomePage />
 
-                    <Route path=path!("/auth") view=Auth />
+                    <Route path=path!("/auth") view=AuthPage />
                     <Route path=path!("/create") view=CreatePage />
                 </Routes>
             </main>
         </Router>
-    }
+    };
+    website
 }
