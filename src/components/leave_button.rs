@@ -1,6 +1,6 @@
 use leptos::{prelude::*, task::spawn_local};
 
-use crate::models::{leave_gameday, Gameday};
+use crate::models::Gameday;
 
 #[component]
 pub fn LeaveButton(
@@ -37,4 +37,44 @@ fn delete_joined(
         .collect();
 
     set_gamedays_joined.set(updated_gamedays);
+}
+
+#[server]
+pub async fn leave_gameday(gameday_id: i32) -> Result<(), ServerFnError> {
+    use crate::auth::user_from_session;
+    use crate::database::get_db;
+    use leptos::logging::log;
+
+    match user_from_session().await {
+        Ok(user) => {
+            let pool = get_db();
+            match sqlx::query!(
+                r#"
+        DELETE FROM player_gameday
+        WHERE player_id = $1 AND gameday_id = $2
+        "#,
+                user.player_id,
+                gameday_id
+            )
+            .execute(pool)
+            .await
+            {
+                Ok(_) => {
+                    log!(
+                        "Player: {:?} left gameday: {:?}",
+                        user.player_id,
+                        gameday_id
+                    );
+                    Ok(())
+                }
+                Err(e) => {
+                    log!("Database error: {:?}", e);
+                    Err(ServerFnError::ServerError(
+                        "Failed to remove player from gameday.".to_string(),
+                    ))
+                }
+            }
+        }
+        Err(err) => Err(err),
+    }
 }
