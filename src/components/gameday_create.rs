@@ -2,7 +2,7 @@ use leptos::{prelude::*, task::spawn_local};
 
 use crate::{
     components::{date_card::DateCard, num_players::NumPlayers, time_card::TimeCard},
-    models::{delete_gameday, Gameday},
+    models::Gameday,
 };
 
 #[component]
@@ -30,5 +30,40 @@ pub fn GamedayCreate(
             </button>
 
         </div>
+    }
+}
+
+#[server]
+async fn delete_gameday(gameday_id: i32) -> Result<(), ServerFnError> {
+    use crate::auth::validate_admin;
+    use crate::database::get_db;
+    use leptos::logging::log;
+
+    if let Err(err) = validate_admin().await {
+        return Err(err);
+    }
+
+    let pool = get_db();
+
+    match sqlx::query!(
+        r#"
+        DELETE FROM gameday
+        WHERE gameday_id = $1
+        "#,
+        gameday_id
+    )
+    .execute(pool)
+    .await
+    {
+        Ok(_) => {
+            log!("Gameday {:?} deleted successfully.", gameday_id);
+            Ok(())
+        }
+        Err(e) => {
+            log!("Database error: {:?}", e);
+            Err(ServerFnError::ServerError(
+                "Failed to delete gameday.".to_string(),
+            ))
+        }
     }
 }

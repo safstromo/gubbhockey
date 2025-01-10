@@ -177,37 +177,6 @@ pub async fn get_players_by_gameday(gameday_id: i32) -> Result<Vec<Player>, Serv
 }
 
 #[server]
-pub async fn delete_gameday(gameday_id: i32) -> Result<(), ServerFnError> {
-    if let Err(err) = validate_admin().await {
-        return Err(err);
-    }
-
-    let pool = get_db();
-
-    match sqlx::query!(
-        r#"
-        DELETE FROM gameday
-        WHERE gameday_id = $1
-        "#,
-        gameday_id
-    )
-    .execute(pool)
-    .await
-    {
-        Ok(_) => {
-            log!("Gameday {:?} deleted successfully.", gameday_id);
-            Ok(())
-        }
-        Err(e) => {
-            log!("Database error: {:?}", e);
-            Err(ServerFnError::ServerError(
-                "Failed to delete gameday.".to_string(),
-            ))
-        }
-    }
-}
-
-#[server]
 pub async fn get_player_by_email(email: String) -> Result<Option<Player>, ServerFnError> {
     let pool = get_db();
 
