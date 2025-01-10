@@ -1,9 +1,4 @@
-#[cfg(feature = "ssr")]
-use crate::models::insert_gameday;
-#[cfg(feature = "ssr")]
-use chrono::{NaiveDate, NaiveDateTime, NaiveTime};
-#[cfg(feature = "ssr")]
-use leptos::logging::log;
+use chrono::{DateTime, Utc};
 use leptos::prelude::*;
 use serde::{Deserialize, Serialize};
 
@@ -46,6 +41,9 @@ struct InputDate {
 
 #[server]
 async fn add_date(input_date: InputDate) -> Result<(), ServerFnError> {
+    use chrono::{NaiveDate, NaiveDateTime, NaiveTime};
+    use leptos::logging::log;
+
     log!("Date submit: {:?}", input_date);
 
     // Parse date and time
@@ -66,4 +64,45 @@ async fn add_date(input_date: InputDate) -> Result<(), ServerFnError> {
 
     // leptos_axum::redirect("/create");
     Ok(())
+}
+
+#[server]
+async fn insert_gameday(
+    start_date: DateTime<Utc>,
+    end_date: DateTime<Utc>,
+) -> Result<(), ServerFnError> {
+    use crate::auth::validate_admin;
+    use crate::database::get_db;
+    use leptos::logging::log;
+
+    if let Err(err) = validate_admin().await {
+        return Err(err);
+    }
+    let pool = get_db();
+    match sqlx::query!(
+        r#"
+        INSERT INTO gameday (start_date, end_date)
+        VALUES ($1, $2)
+        "#,
+        start_date,
+        end_date
+    )
+    .execute(pool)
+    .await
+    {
+        Ok(_) => {
+            log!(
+                "Date inserted successfully! Start:{:?}, End:{:?}",
+                start_date,
+                end_date
+            );
+            Ok(())
+        }
+        Err(e) => {
+            log!("Database error: {:?}", e);
+            Err(ServerFnError::ServerError(
+                "Failed to create gameday.".to_string(),
+            ))
+        }
+    }
 }

@@ -7,6 +7,8 @@ use tower_cookies::Cookie;
 #[cfg(feature = "ssr")]
 use uuid::Uuid;
 
+use crate::models::{Player, UserInfo};
+
 #[component]
 pub fn Auth() -> impl IntoView {
     let query = use_query_map();
@@ -32,9 +34,7 @@ pub fn Auth() -> impl IntoView {
 //TODO: encrypt cookie
 #[server]
 async fn set_loggin_session(csrf_token: String, id_token: String) -> Result<(), ServerFnError> {
-    use crate::models::{
-        get_pkce_verifier, get_player_by_email, insert_player, insert_session, UserInfo,
-    };
+    use crate::models::{get_pkce_verifier, get_player_by_email, insert_session, UserInfo};
     use http::{header, HeaderValue};
     use leptos::logging::log;
     use oauth2::{
@@ -109,4 +109,41 @@ fn create_cookie(uuid: Uuid) -> Cookie<'static> {
         .same_site(SameSite::None)
         .build();
     cookie
+}
+
+#[server]
+async fn insert_player(userinfo: UserInfo) -> Result<Player, ServerFnError> {
+    use leptos::logging::log;
+
+    use crate::database::get_db;
+
+    let pool = get_db();
+
+    match sqlx::query_as!(
+        Player,
+        r#"
+        INSERT INTO player (name, given_name, family_name, email, access_group)
+        VALUES ($1, $2, $3, $4, $5)
+        RETURNING player_id, name, given_name, family_name, email, access_group
+        "#,
+        userinfo.name,
+        userinfo.given_name,
+        userinfo.family_name,
+        userinfo.email,
+        "user"
+    )
+    .fetch_one(pool)
+    .await
+    {
+        Ok(player) => {
+            log!("User inserted successfully! {:?}", player.name);
+            Ok(player)
+        }
+        Err(e) => {
+            log!("Database error: {:?}", e);
+            Err(ServerFnError::ServerError(
+                "Failed to create player.".to_string(),
+            ))
+        }
+    }
 }

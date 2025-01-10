@@ -51,39 +51,6 @@ pub struct PkceStore {
 }
 
 #[server]
-pub async fn insert_player(userinfo: UserInfo) -> Result<Player, ServerFnError> {
-    let pool = get_db();
-
-    match sqlx::query_as!(
-        Player,
-        r#"
-        INSERT INTO player (name, given_name, family_name, email, access_group)
-        VALUES ($1, $2, $3, $4, $5)
-        RETURNING player_id, name, given_name, family_name, email, access_group
-        "#,
-        userinfo.name,
-        userinfo.given_name,
-        userinfo.family_name,
-        userinfo.email,
-        "user"
-    )
-    .fetch_one(pool)
-    .await
-    {
-        Ok(player) => {
-            log!("User inserted successfully! {:?}", player.name);
-            Ok(player)
-        }
-        Err(e) => {
-            log!("Database error: {:?}", e);
-            Err(ServerFnError::ServerError(
-                "Failed to create player.".to_string(),
-            ))
-        }
-    }
-}
-
-#[server]
 pub async fn insert_gameday(
     start_date: DateTime<Utc>,
     end_date: DateTime<Utc>,

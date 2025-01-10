@@ -6,9 +6,9 @@ use std::env;
 #[cfg(feature = "ssr")]
 use uuid::Uuid;
 
-use crate::models::Player;
 #[cfg(feature = "ssr")]
 use crate::models::{delete_session, get_player_by_session, store_pkce_verifier};
+use crate::models::{Player, UserInfo};
 #[cfg(feature = "ssr")]
 use leptos::logging::log;
 
@@ -56,6 +56,41 @@ pub async fn get_auth_url() -> Result<(), ServerFnError> {
     log!("Redirecting to auth provider.");
     leptos_axum::redirect(auth_url.as_str());
     Ok(())
+}
+
+#[server]
+async fn insert_player(userinfo: UserInfo) -> Result<Player, ServerFnError> {
+    use crate::database::get_db;
+
+    let pool = get_db();
+
+    match sqlx::query_as!(
+        Player,
+        r#"
+        INSERT INTO player (name, given_name, family_name, email, access_group)
+        VALUES ($1, $2, $3, $4, $5)
+        RETURNING player_id, name, given_name, family_name, email, access_group
+        "#,
+        userinfo.name,
+        userinfo.given_name,
+        userinfo.family_name,
+        userinfo.email,
+        "user"
+    )
+    .fetch_one(pool)
+    .await
+    {
+        Ok(player) => {
+            log!("User inserted successfully! {:?}", player.name);
+            Ok(player)
+        }
+        Err(e) => {
+            log!("Database error: {:?}", e);
+            Err(ServerFnError::ServerError(
+                "Failed to create player.".to_string(),
+            ))
+        }
+    }
 }
 
 #[server]
