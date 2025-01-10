@@ -1,11 +1,10 @@
 use leptos::{prelude::*, task::spawn_local};
 use leptos_router::hooks::use_query_map;
 use std::env;
+use uuid::Uuid;
 
 #[cfg(feature = "ssr")]
 use tower_cookies::Cookie;
-#[cfg(feature = "ssr")]
-use uuid::Uuid;
 
 use crate::models::{Player, UserInfo};
 
@@ -34,7 +33,10 @@ pub fn Auth() -> impl IntoView {
 //TODO: encrypt cookie
 #[server]
 async fn set_loggin_session(csrf_token: String, id_token: String) -> Result<(), ServerFnError> {
-    use crate::models::{get_pkce_verifier, get_player_by_email, insert_session, UserInfo};
+    use crate::{
+        auth::get_pkce_verifier,
+        models::{get_player_by_email, UserInfo},
+    };
     use http::{header, HeaderValue};
     use leptos::logging::log;
     use oauth2::{
@@ -98,6 +100,46 @@ async fn set_loggin_session(csrf_token: String, id_token: String) -> Result<(), 
     Ok(())
 }
 
+#[server]
+async fn insert_session(player_id: i32) -> Result<Uuid, ServerFnError> {
+    use crate::database::get_db;
+    use chrono::Utc;
+    use leptos::logging::log;
+
+    let pool = get_db();
+    let session_id = uuid::Uuid::new_v4();
+    let expires_at = Utc::now() + chrono::Duration::minutes(15); // Set expiration to 15 minutes from now
+
+    match sqlx::query!(
+        r#"
+        INSERT INTO session (session_id, player_id, created_at, expires_at)
+        VALUES ($1, $2, NOW(), $3)
+        "#,
+        session_id,
+        player_id,
+        expires_at
+    )
+    .execute(pool)
+    .await
+    {
+        Ok(_) => {
+            log!(
+                "Session inserted successfully! SessionID: {:?}, PlayerID: {:?}, Expires: {:?}",
+                session_id,
+                player_id,
+                expires_at
+            );
+            Ok(session_id)
+        }
+        Err(e) => {
+            log!("Database error: {:?}", e);
+            Err(ServerFnError::ServerError(
+                "Failed to create session.".to_string(),
+            ))
+        }
+    }
+}
+
 #[cfg(feature = "ssr")]
 fn create_cookie(uuid: Uuid) -> Cookie<'static> {
     use tower_cookies::cookie::{time::Duration, Cookie, SameSite};
@@ -113,9 +155,8 @@ fn create_cookie(uuid: Uuid) -> Cookie<'static> {
 
 #[server]
 async fn insert_player(userinfo: UserInfo) -> Result<Player, ServerFnError> {
-    use leptos::logging::log;
-
     use crate::database::get_db;
+    use leptos::logging::log;
 
     let pool = get_db();
 

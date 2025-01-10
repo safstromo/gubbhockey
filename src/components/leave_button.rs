@@ -40,7 +40,7 @@ fn delete_joined(
 }
 
 #[server]
-pub async fn leave_gameday(gameday_id: i32) -> Result<(), ServerFnError> {
+async fn leave_gameday(gameday_id: i32) -> Result<(), ServerFnError> {
     use crate::auth::user_from_session;
     use crate::database::get_db;
     use leptos::logging::log;

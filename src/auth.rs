@@ -1,22 +1,11 @@
-#[cfg(feature = "ssr")]
-use http::StatusCode;
+use crate::models::{PkceStore, Player};
 use leptos::prelude::*;
 use leptos::{prelude::ServerFnError, server};
 use std::env;
-#[cfg(feature = "ssr")]
-use uuid::Uuid;
-
-#[cfg(feature = "ssr")]
-use crate::models::{delete_session, get_player_by_session, store_pkce_verifier};
-use crate::models::{Player, UserInfo};
-#[cfg(feature = "ssr")]
-use leptos::logging::log;
-
-#[cfg(feature = "ssr")]
-use leptos_axum::extract;
 
 #[server]
 pub async fn get_auth_url() -> Result<(), ServerFnError> {
+    use leptos::logging::log;
     use oauth2::{
         basic::BasicClient, AuthUrl, ClientId, ClientSecret, CsrfToken, PkceCodeChallenge,
         RedirectUrl, Scope, TokenUrl,
@@ -59,43 +48,13 @@ pub async fn get_auth_url() -> Result<(), ServerFnError> {
 }
 
 #[server]
-async fn insert_player(userinfo: UserInfo) -> Result<Player, ServerFnError> {
-    use crate::database::get_db;
-
-    let pool = get_db();
-
-    match sqlx::query_as!(
-        Player,
-        r#"
-        INSERT INTO player (name, given_name, family_name, email, access_group)
-        VALUES ($1, $2, $3, $4, $5)
-        RETURNING player_id, name, given_name, family_name, email, access_group
-        "#,
-        userinfo.name,
-        userinfo.given_name,
-        userinfo.family_name,
-        userinfo.email,
-        "user"
-    )
-    .fetch_one(pool)
-    .await
-    {
-        Ok(player) => {
-            log!("User inserted successfully! {:?}", player.name);
-            Ok(player)
-        }
-        Err(e) => {
-            log!("Database error: {:?}", e);
-            Err(ServerFnError::ServerError(
-                "Failed to create player.".to_string(),
-            ))
-        }
-    }
-}
-
-#[server]
 pub async fn user_from_session() -> Result<Player, ServerFnError> {
+    use http::StatusCode;
+    use leptos::logging::log;
+    use leptos_axum::extract;
     use tower_cookies::Cookies;
+    use uuid::Uuid;
+
     log!("Getting user from session");
     if let Some(cookies) = extract::<Cookies>().await.ok() {
         if let Some(session_id) = cookies.get("session_id") {
@@ -128,8 +87,13 @@ pub async fn user_from_session() -> Result<Player, ServerFnError> {
 
 #[server]
 pub async fn validate_admin() -> Result<bool, ServerFnError> {
-    log!("Validate admin session");
+    use http::StatusCode;
+    use leptos::logging::log;
+    use leptos_axum::extract;
     use tower_cookies::Cookies;
+    use uuid::Uuid;
+
+    log!("Validate admin session");
     if let Some(cookies) = extract::<Cookies>().await.ok() {
         if let Some(session_id) = cookies.get("session_id") {
             match Uuid::parse_str(session_id.value()) {
@@ -169,7 +133,10 @@ pub async fn validate_admin() -> Result<bool, ServerFnError> {
 
 #[server]
 pub async fn logout() -> Result<(), ServerFnError> {
+    use leptos_axum::extract;
     use tower_cookies::Cookies;
+    use uuid::Uuid;
+
     if let Some(cookies) = extract::<Cookies>().await.ok() {
         if let Some(session_id) = cookies.get("session_id") {
             match Uuid::parse_str(session_id.value()) {
@@ -185,4 +152,131 @@ pub async fn logout() -> Result<(), ServerFnError> {
     let logout_url = env::var("OAUTH_LOGOUT_URL")?;
     leptos_axum::redirect(&logout_url);
     Ok(())
+}
+
+#[server]
+async fn store_pkce_verifier(
+    csrf_token: String,
+    pkce_verifier: String,
+) -> Result<(), ServerFnError> {
+    use crate::database::get_db;
+    use chrono::Utc;
+    use leptos::logging::log;
+
+    let pool = get_db();
+
+    // Calculate expiration (15 minutes)
+    let expires_at = Utc::now() + chrono::Duration::minutes(15);
+
+    match sqlx::query!(
+        "INSERT INTO pkce_store (csrf_token, pkce_verifier, created_at, expires_at)
+         VALUES ($1, $2, NOW(), $3)
+         ON CONFLICT (csrf_token) DO NOTHING",
+        csrf_token,
+        pkce_verifier,
+        expires_at
+    )
+    .execute(pool)
+    .await
+    {
+        Ok(_) => {
+            log!("Successfully stored PKCE verifier and CSRF token.");
+            Ok(())
+        }
+        Err(e) => {
+            log!("Database error: {:?}", e);
+            Err(ServerFnError::ServerError(format!(
+                "Failed to insert tokens: {:?}",
+                e
+            )))
+        }
+    }
+}
+
+#[server]
+pub async fn get_pkce_verifier(csrf_token: String) -> Result<Option<PkceStore>, ServerFnError> {
+    use crate::database::get_db;
+    use leptos::logging::log;
+
+    let pool = get_db();
+    match sqlx::query_as::<_, PkceStore>(
+        "SELECT * FROM pkce_store WHERE csrf_token = $1 AND expires_at > NOW()",
+    )
+    .bind(csrf_token)
+    .fetch_optional(pool)
+    .await
+    {
+        Ok(pkce) => {
+            log!("Successfully got Pkcestore.");
+            Ok(pkce)
+        }
+        Err(e) => {
+            log!("Database error: {:?}", e);
+            Err(ServerFnError::ServerError(format!(
+                "Failed to get tokens: {:?}",
+                e
+            )))
+        }
+    }
+}
+
+#[server]
+async fn delete_session(session_id: uuid::Uuid) -> Result<(), ServerFnError> {
+    use crate::database::get_db;
+    use leptos::logging::log;
+
+    let pool = get_db();
+
+    match sqlx::query!(
+        r#"
+        DELETE FROM session
+        WHERE session_id = $1
+        "#,
+        session_id
+    )
+    .execute(pool)
+    .await
+    {
+        Ok(_) => {
+            log!("Session {:?} deleted successfully.", session_id);
+            Ok(())
+        }
+        Err(e) => {
+            log!("Database error: {:?}", e);
+            Err(ServerFnError::ServerError(
+                "Failed to delete session.".to_string(),
+            ))
+        }
+    }
+}
+
+#[server]
+async fn get_player_by_session(session_id: uuid::Uuid) -> Result<Option<Player>, ServerFnError> {
+    use crate::database::get_db;
+    use leptos::logging::log;
+
+    let pool = get_db();
+
+    match sqlx::query_as!(
+        Player,
+        r#"
+        SELECT p.player_id, p.name, p.given_name, p.family_name, p.email, p.access_group
+        FROM session s
+        JOIN player p ON s.player_id = p.player_id
+        WHERE s.session_id = $1
+          AND s.expires_at > NOW()
+        "#,
+        session_id
+    )
+    .fetch_optional(pool)
+    .await
+    {
+        Ok(player) => Ok(player),
+        Err(e) => {
+            log!("Database error: {:?}", e);
+            Err(ServerFnError::ServerError(
+                "Failed to fetch player.".to_string(),
+            ))
+        }
+    }
 }
