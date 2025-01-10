@@ -121,38 +121,6 @@ pub async fn insert_gameday(
 }
 
 #[server]
-pub async fn join_gameday(gameday_id: i32) -> Result<(), ServerFnError> {
-    match user_from_session().await {
-        Ok(user) => {
-            let pool = get_db();
-            match sqlx::query!(
-                r#"
-        INSERT INTO player_gameday (player_id, gameday_id)
-        VALUES ($1, $2)
-        "#,
-                user.player_id,
-                gameday_id
-            )
-            .execute(pool)
-            .await
-            {
-                Ok(_) => {
-                    log!("Player: {:?} joined: {:?}", user.player_id, gameday_id);
-                    Ok(())
-                }
-                Err(e) => {
-                    log!("Database error: {:?}", e);
-                    Err(ServerFnError::ServerError(
-                        "Failed to add player to gameday.".to_string(),
-                    ))
-                }
-            }
-        }
-        Err(err) => Err(err),
-    }
-}
-
-#[server]
 pub async fn leave_gameday(gameday_id: i32) -> Result<(), ServerFnError> {
     match user_from_session().await {
         Ok(user) => {
@@ -344,54 +312,6 @@ pub async fn count_players_by_gameday(gameday_id: i32) -> Result<i64, ServerFnEr
         gameday_id
     );
     Ok(count.unwrap())
-}
-
-#[server]
-pub async fn get_gamedays_by_player() -> Result<Vec<Gameday>, ServerFnError> {
-    match user_from_session().await {
-        Ok(user) => {
-            let pool = get_db();
-
-            match sqlx::query_as!(
-                Gameday,
-                r#"
-        SELECT
-            g.gameday_id,
-            g.start_date,
-            g.end_date,
-            COUNT(pg.player_id) as player_count
-        FROM
-            Gameday g
-        LEFT JOIN 
-            player_gameday pg ON g.gameday_id = pg.gameday_id
-        WHERE
-            pg.player_id = $1
-        GROUP BY 
-            g.gameday_id, g.start_date, g.end_date
-        ORDER BY
-            g.start_date DESC        
-        "#,
-                user.player_id
-            )
-            .fetch_all(pool)
-            .await
-            {
-                Ok(gamedays) => {
-                    log!(
-                        "Successfully retrieved {} gamedays for player {}",
-                        gamedays.len(),
-                        user.player_id
-                    );
-                    Ok(gamedays)
-                }
-                Err(e) => {
-                    log!("Database error while fetching gamedays for player: {:?}", e);
-                    Err(ServerFnError::from(e))
-                }
-            }
-        }
-        Err(err) => Err(err),
-    }
 }
 
 #[server]

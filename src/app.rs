@@ -2,9 +2,10 @@ use crate::{
     auth::{user_from_session, validate_admin},
     components::{
         auth_page::Auth, date_picker::DatePicker, gameday_card::GamedayCard,
-        gameday_create::GamedayCreate, login_button::LoginButton, logout_button::LogoutButton,
+        gameday_create::GamedayCreate, join_button::get_gamedays_by_player,
+        login_button::LoginButton, logout_button::LogoutButton,
     },
-    models::{get_all_gamedays, get_gamedays_by_player},
+    models::get_all_gamedays,
 };
 use leptos::{prelude::*, task::spawn_local};
 use leptos_meta::{provide_meta_context, Link, MetaTags, Stylesheet, Title};
