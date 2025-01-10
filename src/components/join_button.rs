@@ -6,7 +6,6 @@ use crate::models::{get_gamedays_by_player, join_gameday, Gameday};
 pub fn JoinButton(
     logged_in: ReadSignal<bool>,
     gameday_id: i32,
-    player_id: ReadSignal<i32>,
     set_gamedays_joined: WriteSignal<Vec<Gameday>>,
 ) -> impl IntoView {
     view! {
@@ -15,7 +14,7 @@ pub fn JoinButton(
             on:click=move |_| {
                 spawn_local(async move {
                     if join_gameday(gameday_id).await.is_ok() {
-                        add_joined(set_gamedays_joined, player_id.get_untracked()).await;
+                        add_joined(set_gamedays_joined).await;
                     }
                 });
             }
@@ -27,8 +26,8 @@ pub fn JoinButton(
     }
 }
 
-async fn add_joined(set_gamedays_joined: WriteSignal<Vec<Gameday>>, player_id: i32) {
-    if let Ok(gamedays) = get_gamedays_by_player(player_id).await {
+async fn add_joined(set_gamedays_joined: WriteSignal<Vec<Gameday>>) {
+    if let Ok(gamedays) = get_gamedays_by_player().await {
         set_gamedays_joined.set(gamedays);
     }
 }

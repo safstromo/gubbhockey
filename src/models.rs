@@ -347,12 +347,14 @@ pub async fn count_players_by_gameday(gameday_id: i32) -> Result<i64, ServerFnEr
 }
 
 #[server]
-pub async fn get_gamedays_by_player(player_id: i32) -> Result<Vec<Gameday>, ServerFnError> {
-    let pool = get_db();
+pub async fn get_gamedays_by_player() -> Result<Vec<Gameday>, ServerFnError> {
+    match user_from_session().await {
+        Ok(user) => {
+            let pool = get_db();
 
-    match sqlx::query_as!(
-        Gameday,
-        r#"
+            match sqlx::query_as!(
+                Gameday,
+                r#"
         SELECT
             g.gameday_id,
             g.start_date,
@@ -369,27 +371,26 @@ pub async fn get_gamedays_by_player(player_id: i32) -> Result<Vec<Gameday>, Serv
         ORDER BY
             g.start_date DESC        
         "#,
-        player_id
-    )
-    .fetch_all(pool)
-    .await
-    {
-        Ok(gamedays) => {
-            log!(
-                "Successfully retrieved {} gamedays for player {}",
-                gamedays.len(),
-                player_id
-            );
-            Ok(gamedays)
+                user.player_id
+            )
+            .fetch_all(pool)
+            .await
+            {
+                Ok(gamedays) => {
+                    log!(
+                        "Successfully retrieved {} gamedays for player {}",
+                        gamedays.len(),
+                        user.player_id
+                    );
+                    Ok(gamedays)
+                }
+                Err(e) => {
+                    log!("Database error while fetching gamedays for player: {:?}", e);
+                    Err(ServerFnError::from(e))
+                }
+            }
         }
-        Err(e) => {
-            log!(
-                "Database error while fetching gamedays for player {}: {:?}",
-                player_id,
-                e
-            );
-            Err(ServerFnError::from(e))
-        }
+        Err(err) => Err(err),
     }
 }
 

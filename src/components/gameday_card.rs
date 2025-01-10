@@ -14,7 +14,6 @@ pub fn GamedayCard(
     logged_in: ReadSignal<bool>,
     gamedays_joined: ReadSignal<Vec<Gameday>>,
     set_gamedays_joined: WriteSignal<Vec<Gameday>>,
-    player_id: ReadSignal<i32>,
 ) -> impl IntoView {
     view! {
         <div class="card flex-row items-center justify-around bg-base-100 shadow-xl border">
@@ -30,7 +29,6 @@ pub fn GamedayCard(
                         <JoinButton
                             logged_in=logged_in
                             gameday_id=gameday.gameday_id
-                            player_id=player_id
                             set_gamedays_joined=set_gamedays_joined
                         />
                     }

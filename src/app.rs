@@ -68,7 +68,6 @@ pub fn App() -> impl IntoView {
 fn HomePage() -> impl IntoView {
     let (logged_in, set_loggedin) = signal(false);
     let (is_admin, set_is_admin) = signal(false);
-    let (player_id, set_player_id) = signal(0);
     let (gamedays_joined, set_gamedays_joined) = signal(Vec::new());
     let player = Resource::new(|| (), |_| async move { user_from_session().await });
     let admin_check = Resource::new(|| (), |_| async move { validate_admin().await });
@@ -80,12 +79,11 @@ fn HomePage() -> impl IntoView {
 
     Effect::new(move |_| {
         if let Some(player_data) = player.get() {
-            if let Ok(data) = player_data {
+            if let Ok(_data) = player_data {
                 set_loggedin.set(true);
-                set_player_id.set(data.player_id);
 
                 spawn_local(async move {
-                    if let Ok(gamedays) = get_gamedays_by_player(data.player_id).await {
+                    if let Ok(gamedays) = get_gamedays_by_player().await {
                         set_gamedays_joined.set(gamedays);
                     }
                 });
@@ -129,7 +127,6 @@ fn HomePage() -> impl IntoView {
                                             gamedays_joined=gamedays_joined
                                             set_gamedays_joined=set_gamedays_joined
                                             gameday=day
-                                            player_id=player_id
                                         />
                                     </li>
                                 }
