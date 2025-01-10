@@ -1,12 +1,5 @@
-#[cfg(feature = "ssr")]
-use crate::auth::validate_admin;
-#[cfg(feature = "ssr")]
-use crate::database::get_db;
 use chrono::{DateTime, Utc};
-#[cfg(feature = "ssr")]
-use leptos::logging::log;
-use leptos::prelude::ServerFnError;
-use leptos::server;
+use leptos::prelude::*;
 use serde::{Deserialize, Serialize};
 #[cfg(feature = "ssr")]
 use sqlx::FromRow;
@@ -50,90 +43,11 @@ pub struct PkceStore {
 }
 
 #[server]
-pub async fn get_next_5_gamedays() -> Result<Vec<Gameday>, ServerFnError> {
-    let pool = get_db();
-    match sqlx::query_as!(
-        Gameday,
-        r#"
-        SELECT 
-            g.gameday_id, 
-            g.start_date, 
-            g.end_date,
-            COUNT(pg.player_id) as player_count 
-        FROM 
-            gameday g
-        LEFT JOIN 
-            player_gameday pg ON g.gameday_id = pg.gameday_id
-        WHERE 
-            g.start_date >= NOW() 
-        GROUP BY 
-            g.gameday_id, g.start_date, g.end_date
-        ORDER BY 
-            g.start_date ASC
-        LIMIT 5         
-        "#
-    )
-    .fetch_all(pool)
-    .await
-    {
-        Ok(results) => {
-            log!("Successfully retrieved next 5 gamedays with player counts.");
-            Ok(results)
-        }
-        Err(e) => {
-            log!("Database error: {:?}", e);
-            Err(ServerFnError::ServerError(
-                "Failed to get the next 5 gamedays.".to_string(),
-            ))
-        }
-    }
-}
-
-#[server]
-pub async fn get_all_gamedays() -> Result<Vec<Gameday>, ServerFnError> {
-    if let Err(err) = validate_admin().await {
-        return Err(err);
-    }
-
-    let pool = get_db();
-    match sqlx::query_as!(
-        Gameday,
-        r#"
-        SELECT 
-            g.gameday_id, 
-            g.start_date, 
-            g.end_date,
-            COUNT(pg.player_id) as player_count 
-        FROM 
-            gameday g
-        LEFT JOIN 
-            player_gameday pg ON g.gameday_id = pg.gameday_id
-        WHERE 
-            g.start_date >= NOW() 
-        GROUP BY 
-            g.gameday_id, g.start_date, g.end_date
-        ORDER BY 
-            g.start_date ASC
-        "#
-    )
-    .fetch_all(pool)
-    .await
-    {
-        Ok(results) => {
-            log!("Successfully retrieved all gamedays with player counts.");
-            Ok(results)
-        }
-        Err(e) => {
-            log!("Database error: {:?}", e);
-            Err(ServerFnError::ServerError(
-                "Failed to get all gamedays.".to_string(),
-            ))
-        }
-    }
-}
-
-#[server]
 pub async fn get_players_by_gameday(gameday_id: i32) -> Result<Vec<Player>, ServerFnError> {
+    use crate::auth::validate_admin;
+    use leptos::logging::log;
+
+    use crate::database::get_db;
     if let Err(err) = validate_admin().await {
         return Err(err);
     }
