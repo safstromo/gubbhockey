@@ -175,29 +175,3 @@ pub async fn get_players_by_gameday(gameday_id: i32) -> Result<Vec<Player>, Serv
         }
     }
 }
-
-#[server]
-pub async fn get_player_by_email(email: String) -> Result<Option<Player>, ServerFnError> {
-    let pool = get_db();
-
-    match sqlx::query_as!(
-        Player,
-        r#"
-        SELECT p.player_id, p.name, p.given_name, p.family_name, p.email, p.access_group
-        FROM player p
-        WHERE p.email = $1
-        "#,
-        email
-    )
-    .fetch_optional(pool)
-    .await
-    {
-        Ok(player) => Ok(player),
-        Err(e) => {
-            log!("Database error: {:?}", e);
-            Err(ServerFnError::ServerError(
-                "Failed to fetch player.".to_string(),
-            ))
-        }
-    }
-}

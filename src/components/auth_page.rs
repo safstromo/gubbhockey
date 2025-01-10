@@ -33,10 +33,7 @@ pub fn Auth() -> impl IntoView {
 //TODO: encrypt cookie
 #[server]
 async fn set_loggin_session(csrf_token: String, id_token: String) -> Result<(), ServerFnError> {
-    use crate::{
-        auth::get_pkce_verifier,
-        models::{get_player_by_email, UserInfo},
-    };
+    use crate::{auth::get_pkce_verifier, models::UserInfo};
     use http::{header, HeaderValue};
     use leptos::logging::log;
     use oauth2::{
@@ -184,6 +181,35 @@ async fn insert_player(userinfo: UserInfo) -> Result<Player, ServerFnError> {
             log!("Database error: {:?}", e);
             Err(ServerFnError::ServerError(
                 "Failed to create player.".to_string(),
+            ))
+        }
+    }
+}
+
+#[server]
+async fn get_player_by_email(email: String) -> Result<Option<Player>, ServerFnError> {
+    use crate::database::get_db;
+    use leptos::logging::log;
+
+    let pool = get_db();
+
+    match sqlx::query_as!(
+        Player,
+        r#"
+        SELECT p.player_id, p.name, p.given_name, p.family_name, p.email, p.access_group
+        FROM player p
+        WHERE p.email = $1
+        "#,
+        email
+    )
+    .fetch_optional(pool)
+    .await
+    {
+        Ok(player) => Ok(player),
+        Err(e) => {
+            log!("Database error: {:?}", e);
+            Err(ServerFnError::ServerError(
+                "Failed to fetch player.".to_string(),
             ))
         }
     }
