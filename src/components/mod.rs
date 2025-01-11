@@ -6,6 +6,7 @@ pub mod join_button;
 pub mod leave_button;
 pub mod login_button;
 pub mod logout_button;
+pub mod not_found;
 pub mod num_players;
 pub mod theme;
 pub mod time_card;

@@ -5,7 +5,9 @@ use leptos_router::{
     path, StaticSegment,
 };
 
-use crate::pages::{auth_page::AuthPage, create_page::CreatePage, homepage::HomePage};
+use crate::pages::{
+    auth_page::AuthPage, create_page::CreatePage, day_page::DayPage, homepage::HomePage,
+};
 
 pub fn shell(options: LeptosOptions) -> impl IntoView {
     view! {
@@ -49,6 +51,7 @@ pub fn App() -> impl IntoView {
 
                     <Route path=path!("/auth") view=AuthPage />
                     <Route path=path!("/create") view=CreatePage />
+                    <Route path=path!("/day/:id") view=DayPage />
                 </Routes>
             </main>
         </Router>

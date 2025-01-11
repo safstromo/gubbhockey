@@ -53,7 +53,11 @@ pub fn CreatePage() -> impl IntoView {
                                             .map(|day| {
                                                 view! {
                                                     <li class="my-2">
-                                                        <GamedayCreate gameday=day set_invalidate_gamedays />
+                                                        <GamedayCreate
+                                                            gameday=day
+                                                            set_invalidate_gamedays=Some(set_invalidate_gamedays)
+                                                            redirect_on_delete=false
+                                                        />
                                                     </li>
                                                 }
                                             })

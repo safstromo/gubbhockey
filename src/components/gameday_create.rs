@@ -8,7 +8,8 @@ use crate::{
 #[component]
 pub fn GamedayCreate(
     gameday: Gameday,
-    set_invalidate_gamedays: WriteSignal<bool>,
+    set_invalidate_gamedays: Option<WriteSignal<bool>>,
+    redirect_on_delete: bool,
 ) -> impl IntoView {
     view! {
         <div class="card flex-row items-center justify-around bg-base-100 shadow-xl border">
@@ -21,8 +22,10 @@ pub fn GamedayCreate(
                 class="btn btn-error h-20 m-2 flex-col"
                 on:click=move |_| {
                     spawn_local(async move {
-                        let _ = delete_gameday(gameday.gameday_id).await;
-                        set_invalidate_gamedays.set(true);
+                        let _ = delete_gameday(gameday.gameday_id, redirect_on_delete).await;
+                        if let Some(set_invalidate_gamedays) = set_invalidate_gamedays {
+                            set_invalidate_gamedays.set(true);
+                        }
                     });
                 }
             >
@@ -34,7 +37,7 @@ pub fn GamedayCreate(
 }
 
 #[server]
-async fn delete_gameday(gameday_id: i32) -> Result<(), ServerFnError> {
+async fn delete_gameday(gameday_id: i32, redirect_on_delete: bool) -> Result<(), ServerFnError> {
     use crate::auth::validate_admin;
     use crate::database::get_db;
     use leptos::logging::log;
@@ -57,6 +60,9 @@ async fn delete_gameday(gameday_id: i32) -> Result<(), ServerFnError> {
     {
         Ok(_) => {
             log!("Gameday {:?} deleted successfully.", gameday_id);
+            if redirect_on_delete {
+                leptos_axum::redirect("/");
+            }
             Ok(())
         }
         Err(e) => {
