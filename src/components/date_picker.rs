@@ -3,14 +3,17 @@ use leptos::prelude::*;
 use serde::{Deserialize, Serialize};
 
 #[component]
-pub fn DatePicker(set_invalidate_gamedays: WriteSignal<bool>) -> impl IntoView {
+pub fn DatePicker(
+    set_invalidate_gamedays: WriteSignal<bool>,
+    show_repeat: ReadSignal<bool>,
+    set_show_repeat: WriteSignal<bool>,
+) -> impl IntoView {
     let submit = ServerAction::<AddDate>::new();
     Effect::new(move || {
         if submit.value().get().is_some_and(|result| result.is_ok()) {
             set_invalidate_gamedays.set(true);
         }
     });
-
     view! {
         <ActionForm action=submit>
             <div class="flex flex-col m-2">
@@ -24,6 +27,20 @@ pub fn DatePicker(set_invalidate_gamedays: WriteSignal<bool>) -> impl IntoView {
                     Slut
                 </label>
                 <input type="time" required name="input_date[end]" class="input input-bordered" />
+                <label class="label cursor-pointer mt-2">
+                    <span class="label-text">Återkommande</span>
+                    <input
+                        type="checkbox"
+                        class="toggle"
+                        prop:checked=move || { show_repeat.get() }
+                        on:click=move |_| {
+                            set_show_repeat.set(!show_repeat.get());
+                        }
+                    />
+                </label>
+                <Show when=move || { show_repeat.get() }>
+                    <p>"Show something"</p>
+                </Show>
                 <button class="btn btn-success mt-4" type="submit">
                     Lägg till dag
                 </button>
