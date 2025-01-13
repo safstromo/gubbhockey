@@ -15,7 +15,6 @@ pub fn CreatePage() -> impl IntoView {
     );
 
     let (invalidate_gamedays, set_invalidate_gamedays) = signal(false);
-    let (show_repeat, set_show_repeat) = signal(false);
     let gamedays = Resource::new(|| (), |_| async move { get_all_gamedays().await });
 
     Effect::new(move || {
@@ -44,7 +43,7 @@ pub fn CreatePage() -> impl IntoView {
                                     "Falkenbergs Gubbhockey"
                                 </h1>
                             </A>
-                            <DatePicker set_invalidate_gamedays show_repeat set_show_repeat />
+                            <DatePicker set_invalidate_gamedays />
                             <Transition fallback=move || view! { <p>"Loading..."</p> }>
                                 <h3 class="text-center text-xl mt-6">Alla Speldagar</h3>
                                 <ul class="flex flex-col items-center w-11/12">

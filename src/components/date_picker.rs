@@ -3,12 +3,9 @@ use leptos::prelude::*;
 use serde::{Deserialize, Serialize};
 
 #[component]
-pub fn DatePicker(
-    set_invalidate_gamedays: WriteSignal<bool>,
-    show_repeat: ReadSignal<bool>,
-    set_show_repeat: WriteSignal<bool>,
-) -> impl IntoView {
+pub fn DatePicker(set_invalidate_gamedays: WriteSignal<bool>) -> impl IntoView {
     let submit = ServerAction::<AddDate>::new();
+    let (show_repeat, set_show_repeat) = signal(false);
     Effect::new(move || {
         if submit.value().get().is_some_and(|result| result.is_ok()) {
             set_invalidate_gamedays.set(true);
