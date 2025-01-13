@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 #[component]
 pub fn DatePicker(set_invalidate_gamedays: WriteSignal<bool>) -> impl IntoView {
     let submit = ServerAction::<AddDate>::new();
-    let (show_repeat, set_show_repeat) = signal(false);
+    let show_repeat = RwSignal::new(false);
     Effect::new(move || {
         if submit.value().get().is_some_and(|result| result.is_ok()) {
             set_invalidate_gamedays.set(true);
@@ -26,17 +26,20 @@ pub fn DatePicker(set_invalidate_gamedays: WriteSignal<bool>) -> impl IntoView {
                 <input type="time" required name="input_date[end]" class="input input-bordered" />
                 <label class="label cursor-pointer mt-2">
                     <span class="label-text">Återkommande</span>
-                    <input
-                        type="checkbox"
-                        class="toggle"
-                        prop:checked=move || { show_repeat.get() }
-                        on:click=move |_| {
-                            set_show_repeat.set(!show_repeat.get());
-                        }
-                    />
+                    <input type="checkbox" class="toggle" bind:checked=show_repeat />
                 </label>
                 <Show when=move || { show_repeat.get() }>
-                    <p>"Show something"</p>
+                    <label for="input_date[repeat]" class="max-w-40 mx-auto">
+                        "varje vecka i (1-12) veckor"
+                    </label>
+                    <input
+                        type="number"
+                        required
+                        name="input_date[repeat]"
+                        class="input input-bordered"
+                        min="1"
+                        max="12"
+                    />
                 </Show>
                 <button class="btn btn-success mt-4" type="submit">
                     Lägg till dag
@@ -51,6 +54,7 @@ struct InputDate {
     date: String,
     start: String,
     end: String,
+    repeat: Option<usize>,
 }
 
 #[server]
