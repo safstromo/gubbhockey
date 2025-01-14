@@ -29,7 +29,7 @@ pub fn DatePicker(set_invalidate_gamedays: WriteSignal<bool>) -> impl IntoView {
                     <input type="checkbox" class="toggle" bind:checked=show_repeat />
                 </label>
                 <Show when=move || { show_repeat.get() }>
-                    <label for="input_date[repeat]" class="max-w-40 mx-auto">
+                    <label for="input_date[repeat]" class="max-w-40 mx-auto text-center">
                         "varje vecka i (1-12) veckor"
                     </label>
                     <input
@@ -54,12 +54,12 @@ struct InputDate {
     date: String,
     start: String,
     end: String,
-    repeat: Option<usize>,
+    repeat: Option<i64>,
 }
 
 #[server]
 async fn add_date(input_date: InputDate) -> Result<(), ServerFnError> {
-    use chrono::{NaiveDate, NaiveDateTime, NaiveTime};
+    use chrono::{Duration, NaiveDate, NaiveDateTime, NaiveTime};
     use leptos::logging::log;
 
     log!("Date submit: {:?}", input_date);
@@ -80,7 +80,17 @@ async fn add_date(input_date: InputDate) -> Result<(), ServerFnError> {
 
     insert_gameday(start_datetime.and_utc(), end_datetime.and_utc()).await?;
 
-    // leptos_axum::redirect("/create");
+    if let Some(repeat) = input_date.repeat {
+        log!("Adding repeating date for {} weeks", repeat);
+
+        for n in 1..=repeat {
+            let new_start_date = start_datetime + Duration::weeks(n);
+            let new_end_date = end_datetime + Duration::weeks(n);
+
+            insert_gameday(new_start_date.and_utc(), new_end_date.and_utc()).await?;
+        }
+    }
+
     Ok(())
 }
 
