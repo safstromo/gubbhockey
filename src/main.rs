@@ -35,7 +35,11 @@ async fn main() {
                 Box::pin(async move {
                     log!("Running scheduled job for cleaning up db");
                     if let Err(err) = delete_old_sessions().await {
-                        log!("Failed to delete old sessions{}", err);
+                        log!("Failed to delete old sessions: {}", err);
+                    }
+
+                    if let Err(err) = delete_old_pkce().await {
+                        log!("Failed to delete old pkce: {}", err);
                     }
 
                     // Query the next execution time for this job
@@ -98,6 +102,37 @@ async fn delete_old_sessions() -> Result<(), ServerFnError> {
         }
     }
 }
+
+#[cfg(feature = "ssr")]
+async fn delete_old_pkce() -> Result<(), ServerFnError> {
+    use gubbhockey::database::get_db;
+    use leptos::logging::log;
+
+    let pool = get_db();
+
+    log!("Deleting old pkce");
+    match sqlx::query!(
+        r#"
+        DELETE FROM pkce_store
+        WHERE expires_at <= NOW()
+        "#,
+    )
+    .execute(pool)
+    .await
+    {
+        Ok(_) => {
+            log!("PKCE store deleted successfully.");
+            Ok(())
+        }
+        Err(e) => {
+            log!("Database error: {:?}", e);
+            Err(ServerFnError::ServerError(
+                "Failed to delete old pkce.".to_string(),
+            ))
+        }
+    }
+}
+
 #[cfg(not(feature = "ssr"))]
 pub fn main() {
     // no client-side main function
