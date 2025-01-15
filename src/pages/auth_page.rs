@@ -35,15 +35,15 @@ pub fn AuthPage() -> impl IntoView {
 async fn set_loggin_session(csrf_token: String, id_token: String) -> Result<(), ServerFnError> {
     use crate::{auth::get_pkce_verifier, models::UserInfo};
     use http::{header, HeaderValue};
-    use leptos::logging::log;
     use oauth2::{
         basic::BasicClient, reqwest::async_http_client, AuthUrl, AuthorizationCode, ClientId,
         ClientSecret, PkceCodeVerifier, RedirectUrl, TokenResponse, TokenUrl,
     };
+    use tracing::info;
 
-    log!("Getting pkce verifier");
+    info!("Getting pkce verifier");
     if let Some(pkcestore) = get_pkce_verifier(csrf_token).await? {
-        log!("Creating Oath client");
+        info!("Creating Oath client");
         //TODO: Make this global resource
         let client = BasicClient::new(
             ClientId::new(env::var("OAUTH_CLIENT_ID")?),
@@ -54,7 +54,7 @@ async fn set_loggin_session(csrf_token: String, id_token: String) -> Result<(), 
         // Set the URL the user will be redirected to after the authorization process.
         .set_redirect_uri(RedirectUrl::new(env::var("OAUTH_REDIRECT_URL")?)?);
 
-        log!("Getting access token");
+        info!("Getting access token");
         let token_result = client
             .exchange_code(AuthorizationCode::new(id_token))
             // Set the PKCE code verifier.
@@ -62,7 +62,7 @@ async fn set_loggin_session(csrf_token: String, id_token: String) -> Result<(), 
             .request_async(async_http_client)
             .await?;
 
-        log!("Getting userinfo");
+        info!("Getting userinfo");
         let client = reqwest::Client::new();
         let userinfo = client
             .get("https://dev-6368dhsgrpcts8kr.eu.auth0.com/userinfo")
@@ -72,11 +72,11 @@ async fn set_loggin_session(csrf_token: String, id_token: String) -> Result<(), 
             .json::<UserInfo>()
             .await?;
 
-        log!("userinfo{:?}", userinfo);
+        info!("userinfo{:?}", userinfo);
         let response = expect_context::<leptos_axum::ResponseOptions>();
 
         if let Some(player) = get_player_by_email(userinfo.email.clone()).await? {
-            log!("player exist{:?}", player);
+            info!("player exist{:?}", player);
             let session = insert_session(player.player_id).await?;
             let cookie = create_cookie(session);
             if let Ok(cookie) = HeaderValue::from_str(&cookie.to_string()) {
@@ -84,7 +84,7 @@ async fn set_loggin_session(csrf_token: String, id_token: String) -> Result<(), 
             }
         } else {
             let player = insert_player(userinfo).await?;
-            log!("player inserted: {:?}", player);
+            info!("player inserted: {:?}", player);
             let session = insert_session(player.player_id).await?;
             let cookie = create_cookie(session);
             if let Ok(cookie) = HeaderValue::from_str(&cookie.to_string()) {
@@ -101,7 +101,7 @@ async fn set_loggin_session(csrf_token: String, id_token: String) -> Result<(), 
 async fn insert_session(player_id: i32) -> Result<Uuid, ServerFnError> {
     use crate::database::get_db;
     use chrono::Utc;
-    use leptos::logging::log;
+    use tracing::{error, info};
 
     let pool = get_db();
     let session_id = uuid::Uuid::new_v4();
@@ -120,16 +120,14 @@ async fn insert_session(player_id: i32) -> Result<Uuid, ServerFnError> {
     .await
     {
         Ok(_) => {
-            log!(
+            info!(
                 "Session inserted successfully! SessionID: {:?}, PlayerID: {:?}, Expires: {:?}",
-                session_id,
-                player_id,
-                expires_at
+                session_id, player_id, expires_at
             );
             Ok(session_id)
         }
         Err(e) => {
-            log!("Database error: {:?}", e);
+            error!("Database error: {:?}", e);
             Err(ServerFnError::ServerError(
                 "Failed to create session.".to_string(),
             ))
@@ -153,7 +151,7 @@ fn create_cookie(uuid: Uuid) -> Cookie<'static> {
 #[server]
 async fn insert_player(userinfo: UserInfo) -> Result<Player, ServerFnError> {
     use crate::database::get_db;
-    use leptos::logging::log;
+    use tracing::{error, info};
 
     let pool = get_db();
 
@@ -174,11 +172,11 @@ async fn insert_player(userinfo: UserInfo) -> Result<Player, ServerFnError> {
     .await
     {
         Ok(player) => {
-            log!("User inserted successfully! {:?}", player.name);
+            info!("User inserted successfully! {:?}", player.name);
             Ok(player)
         }
         Err(e) => {
-            log!("Database error: {:?}", e);
+            error!("Database error: {:?}", e);
             Err(ServerFnError::ServerError(
                 "Failed to create player.".to_string(),
             ))
@@ -189,7 +187,7 @@ async fn insert_player(userinfo: UserInfo) -> Result<Player, ServerFnError> {
 #[server]
 async fn get_player_by_email(email: String) -> Result<Option<Player>, ServerFnError> {
     use crate::database::get_db;
-    use leptos::logging::log;
+    use tracing::error;
 
     let pool = get_db();
 
@@ -207,7 +205,7 @@ async fn get_player_by_email(email: String) -> Result<Option<Player>, ServerFnEr
     {
         Ok(player) => Ok(player),
         Err(e) => {
-            log!("Database error: {:?}", e);
+            error!("Database error: {:?}", e);
             Err(ServerFnError::ServerError(
                 "Failed to fetch player.".to_string(),
             ))

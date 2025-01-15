@@ -60,9 +60,9 @@ struct InputDate {
 #[server]
 async fn add_date(input_date: InputDate) -> Result<(), ServerFnError> {
     use chrono::{Duration, NaiveDate, NaiveDateTime, NaiveTime};
-    use leptos::logging::log;
+    use tracing::info;
 
-    log!("Date submit: {:?}", input_date);
+    info!("Date submit: {:?}", input_date);
 
     // Parse date and time
     let date = NaiveDate::parse_from_str(&input_date.date, "%Y-%m-%d")?;
@@ -72,16 +72,15 @@ async fn add_date(input_date: InputDate) -> Result<(), ServerFnError> {
     // Combine date and time into NaiveDateTime
     let start_datetime = NaiveDateTime::new(date, start_time);
     let end_datetime = NaiveDateTime::new(date, end_time);
-    log!(
+    info!(
         "Parsed NaiveStart: {:?}, NaiveEnd: {:?}",
-        start_datetime,
-        end_datetime
+        start_datetime, end_datetime
     );
 
     insert_gameday(start_datetime.and_utc(), end_datetime.and_utc()).await?;
 
     if let Some(repeat) = input_date.repeat {
-        log!("Adding repeating date for {} weeks", repeat);
+        info!("Adding repeating date for {} weeks", repeat);
 
         for n in 1..=repeat {
             let new_start_date = start_datetime + Duration::weeks(n);
@@ -101,7 +100,7 @@ async fn insert_gameday(
 ) -> Result<(), ServerFnError> {
     use crate::auth::validate_admin;
     use crate::database::get_db;
-    use leptos::logging::log;
+    use tracing::{error, info};
 
     if let Err(err) = validate_admin().await {
         return Err(err);
@@ -119,15 +118,14 @@ async fn insert_gameday(
     .await
     {
         Ok(_) => {
-            log!(
+            info!(
                 "Date inserted successfully! Start:{:?}, End:{:?}",
-                start_date,
-                end_date
+                start_date, end_date
             );
             Ok(())
         }
         Err(e) => {
-            log!("Database error: {:?}", e);
+            error!("Database error: {:?}", e);
             Err(ServerFnError::ServerError(
                 "Failed to create gameday.".to_string(),
             ))

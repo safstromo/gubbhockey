@@ -76,7 +76,7 @@ pub fn CreatePage() -> impl IntoView {
 #[server]
 async fn get_all_gamedays() -> Result<Vec<Gameday>, ServerFnError> {
     use crate::database::get_db;
-    use leptos::logging::log;
+    use tracing::{error, info};
 
     if let Err(err) = validate_admin().await {
         return Err(err);
@@ -107,11 +107,11 @@ async fn get_all_gamedays() -> Result<Vec<Gameday>, ServerFnError> {
     .await
     {
         Ok(results) => {
-            log!("Successfully retrieved all gamedays with player counts.");
+            info!("Successfully retrieved all gamedays with player counts.");
             Ok(results)
         }
         Err(e) => {
-            log!("Database error: {:?}", e);
+            error!("Database error: {:?}", e);
             Err(ServerFnError::ServerError(
                 "Failed to get all gamedays.".to_string(),
             ))

@@ -114,7 +114,7 @@ struct Day {
 async fn get_gameday_by_id(id: i32) -> Result<Gameday, ServerFnError> {
     use crate::database::get_db;
     use http::StatusCode;
-    use leptos::logging::log;
+    use tracing::{error, info};
 
     let pool = get_db();
     match sqlx::query_as!(
@@ -140,11 +140,11 @@ async fn get_gameday_by_id(id: i32) -> Result<Gameday, ServerFnError> {
     .await
     {
         Ok(results) => {
-            log!("Successfully retrieved gameday with player counts.");
+            info!("Successfully retrieved gameday with player counts.");
             Ok(results)
         }
         Err(e) => {
-            log!("Database error: {:?}", e);
+            error!("Database error: {:?}", e);
             let opts = expect_context::<leptos_axum::ResponseOptions>();
             opts.set_status(StatusCode::NOT_FOUND);
             Err(ServerFnError::ServerError("No gameday found.".to_string()))

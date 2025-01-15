@@ -45,7 +45,7 @@ pub struct PkceStore {
 #[server]
 pub async fn get_players_by_gameday(gameday_id: i32) -> Result<Vec<Player>, ServerFnError> {
     use crate::auth::validate_admin;
-    use leptos::logging::log;
+    use tracing::{error, info};
 
     use crate::database::get_db;
     if let Err(err) = validate_admin().await {
@@ -78,11 +78,11 @@ pub async fn get_players_by_gameday(gameday_id: i32) -> Result<Vec<Player>, Serv
     .await
     {
         Ok(players) => {
-            log!("Successfully got players connected to {:?}", gameday_id);
+            info!("Successfully got players connected to {:?}", gameday_id);
             Ok(players)
         }
         Err(e) => {
-            log!("Database error: {:?}", e);
+            error!("Database error: {:?}", e);
             Err(ServerFnError::ServerError(
                 "Failed to get players connected to gameday.".to_string(),
             ))

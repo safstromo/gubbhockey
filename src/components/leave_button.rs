@@ -43,7 +43,7 @@ fn delete_joined(
 async fn leave_gameday(gameday_id: i32) -> Result<(), ServerFnError> {
     use crate::auth::user_from_session;
     use crate::database::get_db;
-    use leptos::logging::log;
+    use tracing::{error, info};
 
     match user_from_session().await {
         Ok(user) => {
@@ -60,15 +60,14 @@ async fn leave_gameday(gameday_id: i32) -> Result<(), ServerFnError> {
             .await
             {
                 Ok(_) => {
-                    log!(
+                    info!(
                         "Player: {:?} left gameday: {:?}",
-                        user.player_id,
-                        gameday_id
+                        user.player_id, gameday_id
                     );
                     Ok(())
                 }
                 Err(e) => {
-                    log!("Database error: {:?}", e);
+                    error!("Database error: {:?}", e);
                     Err(ServerFnError::ServerError(
                         "Failed to remove player from gameday.".to_string(),
                     ))

@@ -1,12 +1,14 @@
 #[cfg(feature = "ssr")]
 use leptos::prelude::*;
 #[cfg(feature = "ssr")]
+use tracing::{error, info, Level};
+
+#[cfg(feature = "ssr")]
 #[tokio::main]
 async fn main() {
     use axum::Router;
     use gubbhockey::app::*;
     use gubbhockey::database::init_db;
-    use leptos::logging::log;
     use leptos::prelude::*;
     use leptos_axum::{generate_route_list, LeptosRoutes};
     extern crate dotenv;
@@ -14,8 +16,17 @@ async fn main() {
     use tokio_cron_scheduler::Job;
     use tokio_cron_scheduler::JobScheduler;
     use tower_cookies::CookieManagerLayer;
+    use tracing_subscriber::FmtSubscriber;
 
     dotenv().ok();
+
+    let subscriber = FmtSubscriber::builder()
+        // all spans/events with a level higher than TRACE (e.g, debug, info, warn, etc.)
+        // will be written to stdout.
+        .with_max_level(Level::INFO)
+        .finish();
+
+    tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");
 
     let conf = get_configuration(None).unwrap();
     let addr = conf.leptos_options.site_addr;
@@ -33,20 +44,20 @@ async fn main() {
         .add(
             Job::new_async("0 0 * * * *", |uuid, mut l| {
                 Box::pin(async move {
-                    log!("Running scheduled job for cleaning up db");
+                    info!("Running scheduled job for cleaning up db");
                     if let Err(err) = delete_old_sessions().await {
-                        log!("Failed to delete old sessions: {}", err);
+                        info!("Failed to delete old sessions: {}", err);
                     }
 
                     if let Err(err) = delete_old_pkce().await {
-                        log!("Failed to delete old pkce: {}", err);
+                        info!("Failed to delete old pkce: {}", err);
                     }
 
                     // Query the next execution time for this job
                     let next_tick = l.next_tick_for_job(uuid).await;
                     match next_tick {
-                        Ok(Some(ts)) => log!("Next time for job is {:?}", ts),
-                        _ => println!("Could not get next tick for job"),
+                        Ok(Some(ts)) => info!("Next time for job is {:?}", ts),
+                        _ => error!("Could not get next tick for job"),
                     }
                 })
             })
@@ -66,7 +77,7 @@ async fn main() {
         .fallback(leptos_axum::file_and_error_handler(shell))
         .with_state(leptos_options);
 
-    log!("listening on http://{}", &addr);
+    info!("listening on http://{}", &addr);
     let listener = tokio::net::TcpListener::bind(&addr).await.unwrap();
     axum::serve(listener, app.into_make_service())
         .await
@@ -76,11 +87,10 @@ async fn main() {
 #[cfg(feature = "ssr")]
 async fn delete_old_sessions() -> Result<(), ServerFnError> {
     use gubbhockey::database::get_db;
-    use leptos::logging::log;
 
     let pool = get_db();
 
-    log!("Deleting old sessions");
+    info!("Deleting old sessions");
     match sqlx::query!(
         r#"
         DELETE FROM session
@@ -91,11 +101,11 @@ async fn delete_old_sessions() -> Result<(), ServerFnError> {
     .await
     {
         Ok(_) => {
-            log!("Sessions deleted successfully.");
+            info!("Sessions deleted successfully.");
             Ok(())
         }
         Err(e) => {
-            log!("Database error: {:?}", e);
+            error!("Database error: {:?}", e);
             Err(ServerFnError::ServerError(
                 "Failed to delete old sessions.".to_string(),
             ))
@@ -106,11 +116,10 @@ async fn delete_old_sessions() -> Result<(), ServerFnError> {
 #[cfg(feature = "ssr")]
 async fn delete_old_pkce() -> Result<(), ServerFnError> {
     use gubbhockey::database::get_db;
-    use leptos::logging::log;
 
     let pool = get_db();
 
-    log!("Deleting old pkce");
+    info!("Deleting old pkce");
     match sqlx::query!(
         r#"
         DELETE FROM pkce_store
@@ -121,11 +130,11 @@ async fn delete_old_pkce() -> Result<(), ServerFnError> {
     .await
     {
         Ok(_) => {
-            log!("PKCE store deleted successfully.");
+            info!("PKCE store deleted successfully.");
             Ok(())
         }
         Err(e) => {
-            log!("Database error: {:?}", e);
+            error!("Database error: {:?}", e);
             Err(ServerFnError::ServerError(
                 "Failed to delete old pkce.".to_string(),
             ))

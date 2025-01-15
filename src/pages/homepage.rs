@@ -85,7 +85,7 @@ pub fn HomePage() -> impl IntoView {
 #[server]
 async fn get_next_5_gamedays() -> Result<Vec<Gameday>, ServerFnError> {
     use crate::database::get_db;
-    use leptos::logging::log;
+    use tracing::{error, info};
 
     let pool = get_db();
     match sqlx::query_as!(
@@ -113,11 +113,11 @@ async fn get_next_5_gamedays() -> Result<Vec<Gameday>, ServerFnError> {
     .await
     {
         Ok(results) => {
-            log!("Successfully retrieved next 5 gamedays with player counts.");
+            info!("Successfully retrieved next 5 gamedays with player counts.");
             Ok(results)
         }
         Err(e) => {
-            log!("Database error: {:?}", e);
+            error!("Database error: {:?}", e);
             Err(ServerFnError::ServerError(
                 "Failed to get the next 5 gamedays.".to_string(),
             ))

@@ -36,7 +36,7 @@ async fn add_joined(set_gamedays_joined: WriteSignal<Vec<Gameday>>) {
 async fn join_gameday(gameday_id: i32) -> Result<(), ServerFnError> {
     use crate::auth::user_from_session;
     use crate::database::get_db;
-    use leptos::logging::log;
+    use tracing::{error, info};
 
     match user_from_session().await {
         Ok(user) => {
@@ -53,11 +53,11 @@ async fn join_gameday(gameday_id: i32) -> Result<(), ServerFnError> {
             .await
             {
                 Ok(_) => {
-                    log!("Player: {:?} joined: {:?}", user.player_id, gameday_id);
+                    info!("Player: {:?} joined: {:?}", user.player_id, gameday_id);
                     Ok(())
                 }
                 Err(e) => {
-                    log!("Database error: {:?}", e);
+                    error!("Database error: {:?}", e);
                     Err(ServerFnError::ServerError(
                         "Failed to add player to gameday.".to_string(),
                     ))
@@ -72,7 +72,7 @@ async fn join_gameday(gameday_id: i32) -> Result<(), ServerFnError> {
 pub async fn get_gamedays_by_player() -> Result<Vec<Gameday>, ServerFnError> {
     use crate::auth::user_from_session;
     use crate::database::get_db;
-    use leptos::logging::log;
+    use tracing::{error, info};
 
     match user_from_session().await {
         Ok(user) => {
@@ -103,7 +103,7 @@ pub async fn get_gamedays_by_player() -> Result<Vec<Gameday>, ServerFnError> {
             .await
             {
                 Ok(gamedays) => {
-                    log!(
+                    info!(
                         "Successfully retrieved {} gamedays for player {}",
                         gamedays.len(),
                         user.player_id
@@ -111,7 +111,7 @@ pub async fn get_gamedays_by_player() -> Result<Vec<Gameday>, ServerFnError> {
                     Ok(gamedays)
                 }
                 Err(e) => {
-                    log!("Database error while fetching gamedays for player: {:?}", e);
+                    error!("Database error while fetching gamedays for player: {:?}", e);
                     Err(ServerFnError::from(e))
                 }
             }

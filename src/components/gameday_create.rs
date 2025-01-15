@@ -45,7 +45,7 @@ pub fn GamedayCreate(
 async fn delete_gameday(gameday_id: i32, redirect_on_delete: bool) -> Result<(), ServerFnError> {
     use crate::auth::validate_admin;
     use crate::database::get_db;
-    use leptos::logging::log;
+    use tracing::{error, info};
 
     if let Err(err) = validate_admin().await {
         return Err(err);
@@ -64,14 +64,14 @@ async fn delete_gameday(gameday_id: i32, redirect_on_delete: bool) -> Result<(),
     .await
     {
         Ok(_) => {
-            log!("Gameday {:?} deleted successfully.", gameday_id);
+            info!("Gameday {:?} deleted successfully.", gameday_id);
             if redirect_on_delete {
                 leptos_axum::redirect("/");
             }
             Ok(())
         }
         Err(e) => {
-            log!("Database error: {:?}", e);
+            error!("Database error: {:?}", e);
             Err(ServerFnError::ServerError(
                 "Failed to delete gameday.".to_string(),
             ))

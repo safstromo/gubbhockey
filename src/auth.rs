@@ -5,11 +5,11 @@ use std::env;
 
 #[server]
 pub async fn get_auth_url() -> Result<(), ServerFnError> {
-    use leptos::logging::log;
     use oauth2::{
         basic::BasicClient, AuthUrl, ClientId, ClientSecret, CsrfToken, PkceCodeChallenge,
         RedirectUrl, Scope, TokenUrl,
     };
+    use tracing::info;
 
     // Create an OAuth2 client by specifying the client ID, client secret, authorization URL and
     // token URL.
@@ -42,7 +42,7 @@ pub async fn get_auth_url() -> Result<(), ServerFnError> {
     )
     .await?;
 
-    log!("Redirecting to auth provider.");
+    info!("Redirecting to auth provider.");
     leptos_axum::redirect(auth_url.as_str());
     Ok(())
 }
@@ -50,19 +50,19 @@ pub async fn get_auth_url() -> Result<(), ServerFnError> {
 #[server]
 pub async fn user_from_session() -> Result<Player, ServerFnError> {
     use http::StatusCode;
-    use leptos::logging::log;
     use leptos_axum::extract;
     use tower_cookies::Cookies;
+    use tracing::{error, info};
     use uuid::Uuid;
 
-    log!("Getting user from session");
+    info!("Getting user from session");
     if let Some(cookies) = extract::<Cookies>().await.ok() {
         if let Some(session_id) = cookies.get("session_id") {
             match Uuid::parse_str(session_id.value()) {
                 Ok(uuid) => match get_player_by_session(uuid).await? {
                     Some(player) => return Ok(player),
                     None => {
-                        log!("No player with session {:?} found", uuid);
+                        error!("No player with session {:?} found", uuid);
 
                         let opts = expect_context::<leptos_axum::ResponseOptions>();
                         opts.set_status(StatusCode::UNAUTHORIZED);
@@ -70,7 +70,7 @@ pub async fn user_from_session() -> Result<Player, ServerFnError> {
                     }
                 },
                 Err(_) => {
-                    log!("Invalid session_id: {:?}", session_id.value());
+                    error!("Invalid session_id: {:?}", session_id.value());
                     let opts = expect_context::<leptos_axum::ResponseOptions>();
                     opts.set_status(StatusCode::UNAUTHORIZED);
                     return Err(ServerFnError::ServerError("Unauthorized".to_string()));
@@ -79,7 +79,7 @@ pub async fn user_from_session() -> Result<Player, ServerFnError> {
         }
     }
 
-    log!("No session cookie found");
+    error!("No session cookie found");
     let opts = expect_context::<leptos_axum::ResponseOptions>();
     opts.set_status(StatusCode::NOT_FOUND);
     return Err(ServerFnError::ServerError("No user found".to_string()));
@@ -88,12 +88,12 @@ pub async fn user_from_session() -> Result<Player, ServerFnError> {
 #[server]
 pub async fn validate_admin() -> Result<bool, ServerFnError> {
     use http::StatusCode;
-    use leptos::logging::log;
     use leptos_axum::extract;
     use tower_cookies::Cookies;
+    use tracing::{error, info};
     use uuid::Uuid;
 
-    log!("Validate admin session");
+    info!("Validate admin session");
     if let Some(cookies) = extract::<Cookies>().await.ok() {
         if let Some(session_id) = cookies.get("session_id") {
             match Uuid::parse_str(session_id.value()) {
@@ -106,7 +106,7 @@ pub async fn validate_admin() -> Result<bool, ServerFnError> {
                         }
                     }
                     None => {
-                        log!("No player with session {:?} found", uuid);
+                        error!("No player with session {:?} found", uuid);
 
                         let opts = expect_context::<leptos_axum::ResponseOptions>();
                         opts.set_status(StatusCode::UNAUTHORIZED);
@@ -115,7 +115,7 @@ pub async fn validate_admin() -> Result<bool, ServerFnError> {
                     }
                 },
                 Err(_) => {
-                    log!("Invalid session_id: {:?}", session_id.value());
+                    error!("Invalid session_id: {:?}", session_id.value());
                     let opts = expect_context::<leptos_axum::ResponseOptions>();
                     opts.set_status(StatusCode::UNAUTHORIZED);
                     leptos_axum::redirect("/");
@@ -125,7 +125,7 @@ pub async fn validate_admin() -> Result<bool, ServerFnError> {
         }
     }
 
-    log!("No session cookie found");
+    error!("No session cookie found");
     let opts = expect_context::<leptos_axum::ResponseOptions>();
     opts.set_status(StatusCode::UNAUTHORIZED);
     return Err(ServerFnError::ServerError("Unauthorized".to_string()));
@@ -135,6 +135,7 @@ pub async fn validate_admin() -> Result<bool, ServerFnError> {
 pub async fn logout() -> Result<(), ServerFnError> {
     use leptos_axum::extract;
     use tower_cookies::Cookies;
+    use tracing::error;
     use uuid::Uuid;
 
     if let Some(cookies) = extract::<Cookies>().await.ok() {
@@ -143,7 +144,8 @@ pub async fn logout() -> Result<(), ServerFnError> {
                 Ok(uuid) => {
                     let _ = delete_session(uuid).await;
                 }
-                Err(_) => {
+                Err(err) => {
+                    error!("{}", err);
                     return Err(ServerFnError::ServerError("No session_id".to_string()));
                 }
             };
@@ -161,7 +163,7 @@ async fn store_pkce_verifier(
 ) -> Result<(), ServerFnError> {
     use crate::database::get_db;
     use chrono::Utc;
-    use leptos::logging::log;
+    use tracing::{error, info};
 
     let pool = get_db();
 
@@ -180,11 +182,11 @@ async fn store_pkce_verifier(
     .await
     {
         Ok(_) => {
-            log!("Successfully stored PKCE verifier and CSRF token.");
+            info!("Successfully stored PKCE verifier and CSRF token.");
             Ok(())
         }
         Err(e) => {
-            log!("Database error: {:?}", e);
+            error!("Database error: {:?}", e);
             Err(ServerFnError::ServerError(format!(
                 "Failed to insert tokens: {:?}",
                 e
@@ -196,7 +198,7 @@ async fn store_pkce_verifier(
 #[server]
 pub async fn get_pkce_verifier(csrf_token: String) -> Result<Option<PkceStore>, ServerFnError> {
     use crate::database::get_db;
-    use leptos::logging::log;
+    use tracing::{error, info};
 
     let pool = get_db();
     match sqlx::query_as::<_, PkceStore>(
@@ -207,11 +209,11 @@ pub async fn get_pkce_verifier(csrf_token: String) -> Result<Option<PkceStore>, 
     .await
     {
         Ok(pkce) => {
-            log!("Successfully got Pkcestore.");
+            info!("Successfully got Pkcestore.");
             Ok(pkce)
         }
         Err(e) => {
-            log!("Database error: {:?}", e);
+            error!("Database error: {:?}", e);
             Err(ServerFnError::ServerError(format!(
                 "Failed to get tokens: {:?}",
                 e
@@ -223,7 +225,7 @@ pub async fn get_pkce_verifier(csrf_token: String) -> Result<Option<PkceStore>, 
 #[server]
 async fn delete_session(session_id: uuid::Uuid) -> Result<(), ServerFnError> {
     use crate::database::get_db;
-    use leptos::logging::log;
+    use tracing::{error, info};
 
     let pool = get_db();
 
@@ -238,11 +240,11 @@ async fn delete_session(session_id: uuid::Uuid) -> Result<(), ServerFnError> {
     .await
     {
         Ok(_) => {
-            log!("Session {:?} deleted successfully.", session_id);
+            info!("Session {:?} deleted successfully.", session_id);
             Ok(())
         }
         Err(e) => {
-            log!("Database error: {:?}", e);
+            error!("Database error: {:?}", e);
             Err(ServerFnError::ServerError(
                 "Failed to delete session.".to_string(),
             ))
@@ -253,7 +255,7 @@ async fn delete_session(session_id: uuid::Uuid) -> Result<(), ServerFnError> {
 #[server]
 async fn get_player_by_session(session_id: uuid::Uuid) -> Result<Option<Player>, ServerFnError> {
     use crate::database::get_db;
-    use leptos::logging::log;
+    use tracing::error;
 
     let pool = get_db();
 
@@ -273,7 +275,7 @@ async fn get_player_by_session(session_id: uuid::Uuid) -> Result<Option<Player>,
     {
         Ok(player) => Ok(player),
         Err(e) => {
-            log!("Database error: {:?}", e);
+            error!("Database error: {:?}", e);
             Err(ServerFnError::ServerError(
                 "Failed to fetch player.".to_string(),
             ))
