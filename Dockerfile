@@ -2,7 +2,7 @@
 FROM rustlang/rust:nightly-alpine as builder
 
 RUN apk update && \
-    apk add --no-cache bash curl npm libc-dev binaryen openssl-dev clang libclang build-base
+    apk add --no-cache bash curl npm libc-dev binaryen openssl-dev clang
 
 RUN npm install -g sass
 
