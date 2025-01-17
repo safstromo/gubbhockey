@@ -36,7 +36,7 @@ pub fn App() -> impl IntoView {
     let website = view! {
         // injects a stylesheet into the document <head>
         // id=leptos means cargo-leptos will hot-reload this stylesheet
-        <Stylesheet id="leptos" href="/pkg/gubbhockey.css" />
+        <Stylesheet id="leptos" href="/style.css" />
         <Link
             href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap"
             rel="stylesheet"
