@@ -15,10 +15,6 @@ RUN rustup target add wasm32-unknown-unknown
 RUN npm cache clean --force && \
     rm -rf package-lock.json node_modules
 
-# Install daisyui
-RUN npm install
-RUN npm i -D daisyui@latest
-
 WORKDIR /work
 COPY . .
 
