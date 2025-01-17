@@ -11,6 +11,11 @@ RUN curl --proto '=https' --tlsv1.2 -LsSf https://github.com/leptos-rs/cargo-lep
 # Add the WASM target
 RUN rustup target add wasm32-unknown-unknown
 
+# Clear npm cache and remove package-lock.json and node_modules
+RUN npm cache clean --force && \
+    rm -rf package-lock.json node_modules
+
+# Install daisyui
 RUN npm i -D daisyui@latest
 
 WORKDIR /work
