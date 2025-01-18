@@ -17,6 +17,7 @@ env:
   IMAGE_NAME: ${{ github.repository }}
   # Mock url for sqlx to build
   DATABASE_URL: "postgres://develop:develop@localhost:5432/gubbhockey"
+  SQLX_OFFLINE: true
 
 jobs:
   build:
