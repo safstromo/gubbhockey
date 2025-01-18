@@ -63,6 +63,8 @@ USER app
 ENV RUST_LOG="info"
 ENV LEPTOS_SITE_ADDR="0.0.0.0:3000"
 ENV LEPTOS_SITE_ROOT="site"
+ENV DATABASE_URL="postgres://develop:develop@localhost:5432/gubbhockey"
+ 
 EXPOSE 3000
 
 CMD [ "/app/gubbhockey" ]
