@@ -46,7 +46,7 @@ COPY . .
 
 RUN cargo update -p wasm-bindgen --precise 0.2.100
 RUN cargo install sqlx-cli
-RUN cargo sqlx prepare
+RUN cargo sqlx prepare --check
 
 RUN cargo leptos build --release
 
