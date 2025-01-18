@@ -19,6 +19,7 @@ WORKDIR /work
 COPY . .
 
 RUN cargo update -p wasm-bindgen --precise 0.2.100
+RUN cargo sqlx prepare
 RUN cargo leptos build --release -vv
 
 FROM rustlang/rust:nightly-alpine as runner
