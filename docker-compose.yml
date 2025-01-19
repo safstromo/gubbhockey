@@ -1,11 +1,8 @@
 version: "3.9"
 
 services:
-  gubbhockey-postgres:
-    image: postgres
+  app:
+    image: gubbhockey
     ports:
-      - 5432:5432
-    environment:
-      - POSTGRES_PASSWORD=develop
-      - POSTGRES_USER=develop
-      - POSTGRES_DB=gubbhockey
+      - 3001:3000
+    restart: unless-stopped
