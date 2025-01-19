@@ -7,7 +7,10 @@ use leptos_router::{
 
 use crate::{
     components::not_found::NotFound,
-    pages::{auth_page::AuthPage, create_page::CreatePage, day_page::DayPage, homepage::HomePage},
+    pages::{
+        auth_page::AuthPage, create_page::CreatePage, day_page::DayPage, homepage::HomePage,
+        terms_page::TermsPage,
+    },
 };
 
 pub fn shell(options: LeptosOptions) -> impl IntoView {
@@ -36,7 +39,7 @@ pub fn App() -> impl IntoView {
     let website = view! {
         // injects a stylesheet into the document <head>
         // id=leptos means cargo-leptos will hot-reload this stylesheet
-        <Stylesheet id="leptos" href="/style.css" />
+        <Stylesheet id="leptos" href="/pkg/gubbhockey.css" />
         <Link
             href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap"
             rel="stylesheet"
@@ -53,6 +56,7 @@ pub fn App() -> impl IntoView {
                     <Route path=path!("/auth") view=AuthPage />
                     <Route path=path!("/create") view=CreatePage />
                     <Route path=path!("/day/:id") view=DayPage />
+                    <Route path=path!("/terms") view=TermsPage />
                 </Routes>
             </main>
         </Router>

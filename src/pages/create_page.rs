@@ -38,11 +38,11 @@ pub fn CreatePage() -> impl IntoView {
                 view! {
                     <Show when=move || { is_admin } fallback=|| view! { <Redirect path="/" /> }>
                         <div class="flex flex-col min-h-screen w-full items-center relative">
-                            <A href="/">
-                                <h1 class="text-4xl text-center mt-14 mb-6">
-                                    "Falkenbergs Gubbhockey"
-                                </h1>
-                            </A>
+                            <div class="flex justify-center">
+                                <A href="/">
+                                    <img src="Logo-nobg.png" alt="Logo" class="h-60 w-60" />
+                                </A>
+                            </div>
                             <DatePicker set_invalidate_gamedays />
                             <Transition fallback=move || view! { <p>"Loading..."</p> }>
                                 <h3 class="text-center text-xl mt-6">Alla Speldagar</h3>

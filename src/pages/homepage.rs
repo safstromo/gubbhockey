@@ -55,7 +55,11 @@ pub fn HomePage() -> impl IntoView {
                     </A>
                 </Show>
             </div>
-            <h1 class="text-4xl text-center mt-14 mb-6">"Falkenbergs Gubbhockey"</h1>
+            <div class="flex justify-center">
+                <A href="/">
+                    <img src="Logo-nobg.png" alt="Logo" class="h-60 w-60" />
+                </A>
+            </div>
             <h3 class="text-xl">Speldagar</h3>
             <Transition fallback=move || view! { <p>"Loading..."</p> }>
                 <ul class="flex flex-col items-center w-11/12">
@@ -78,6 +82,21 @@ pub fn HomePage() -> impl IntoView {
                     })}
                 </ul>
             </Transition>
+            <footer>
+                <div class="text-center mt-6">
+                    <A href="/terms">
+                        <p class="underline m-2">"Terms and Conditions"</p>
+                    </A>
+                    <p>"2025 Falkenbergs Gubbhockey."</p>
+                    <p>"All rights reserved."</p>
+                    <p>
+                        <a href="#" class="underline">
+                            Back to top
+                        </a>
+                    </p>
+                </div>
+            </footer>
+
         </div>
     }
 }

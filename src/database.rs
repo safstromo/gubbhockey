@@ -9,7 +9,7 @@ async fn create_pool() -> sqlx::PgPool {
     info!("Creating database pool");
     let database_url = std::env::var("DATABASE_URL").expect("no database url specify");
     let pool = sqlx::postgres::PgPoolOptions::new()
-        .max_connections(4)
+        .max_connections(10)
         .connect(database_url.as_str())
         .await
         .expect("could not connect to database_url");
