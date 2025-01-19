@@ -108,3 +108,17 @@ Finally, run the server binary.
 ## Licensing
 
 This template itself is released under the Unlicense. You should replace the LICENSE for your own application with an appropriate license if you plan to release it publicly.
+
+Building dockerfile
+
+Run cargo leptos build --release
+
+add envstuff to dockerfile
+
+run docker build -t gubbhockey
+
+export image: docker save -o gubbhockey_image.tar gubbhockey:latest
+
+move to server with scp: scp gubbhockey_image.tar user@ip:gubbhockey/
+
+import image: docker load -i gubbhockey_image.tar
