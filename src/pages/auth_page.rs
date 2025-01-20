@@ -105,7 +105,7 @@ async fn insert_session(player_id: i32) -> Result<Uuid, ServerFnError> {
 
     let pool = get_db();
     let session_id = uuid::Uuid::new_v4();
-    let expires_at = Utc::now() + chrono::Duration::minutes(15); // Set expiration to 15 minutes from now
+    let expires_at = Utc::now() + chrono::Duration::days(1); // Set expiration to 1 day from now
 
     match sqlx::query!(
         r#"
