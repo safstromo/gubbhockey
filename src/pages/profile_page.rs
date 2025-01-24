@@ -31,13 +31,25 @@ pub fn ProfilePage() -> impl IntoView {
                                 <img src="Logo-nobg.png" alt="Logo" class="h-60 w-60" />
                             </A>
                         </div>
+                        <div class="avatar placeholder mb-6">
+                            <div class="bg-neutral text-neutral-content w-24 rounded-full">
+                                <span class="text-3xl">
+                                    {format!(
+                                        "{}{}",
+                                        player.given_name.chars().next().unwrap_or(' '),
+                                        player.family_name.chars().next().unwrap_or(' '),
+                                    )}
+
+                                </span>
+                            </div>
+                        </div>
                         <p class="m-2 text-xl text-bold">{player.name}</p>
                         <p class="m-2">{player.email}</p>
 
                         <label class="label cursor-pointer mt-2">
                             <span class="label-text mx-2">Utespelare</span>
                             <input type="checkbox" class="toggle" bind:checked=goalkeeper />
-                            <span class="label-text mx-2">Målvakt</span>
+                            <span class="label-text mx-2">"Målvakt   "</span>
                         </label>
 
                     </div>
