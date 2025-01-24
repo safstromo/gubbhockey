@@ -9,7 +9,7 @@ use crate::{
     components::not_found::NotFound,
     pages::{
         auth_page::AuthPage, create_page::CreatePage, day_page::DayPage, homepage::HomePage,
-        terms_page::TermsPage,
+        profile_page::ProfilePage, terms_page::TermsPage,
     },
 };
 
@@ -57,6 +57,7 @@ pub fn App() -> impl IntoView {
                     <Route path=path!("/create") view=CreatePage />
                     <Route path=path!("/day/:id") view=DayPage />
                     <Route path=path!("/terms") view=TermsPage />
+                    <Route path=path!("/profile") view=ProfilePage />
                 </Routes>
             </main>
         </Router>

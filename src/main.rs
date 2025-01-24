@@ -42,7 +42,8 @@ async fn main() {
     // Add async job to clear db
     sched
         .add(
-            Job::new_async("0 0 * * * *", |uuid, mut l| {
+            //3am every day
+            Job::new_async("0 0 3 * * *", |uuid, mut l| {
                 Box::pin(async move {
                     info!("Running scheduled job for cleaning up db");
                     if let Err(err) = delete_old_sessions().await {
