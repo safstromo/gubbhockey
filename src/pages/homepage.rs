@@ -43,9 +43,42 @@ pub fn HomePage() -> impl IntoView {
 
     view! {
         <div class="flex flex-col min-h-screen w-full items-center relative">
-            <div class="absolute top-4 right-4">
+            <div class="absolute top-4 right-4 flex flex-col justify-center">
                 <Show when=move || { logged_in.get() } fallback=|| view! { <LoginButton /> }>
-                    <LogoutButton />
+                    <Show when=move || { logged_in.get() }>
+                        <Transition>
+                            {move || Suspend::new(async move {
+                                let player = player.await;
+                                view! {
+                                    <A href="/profile">
+                                        <div class="avatar placeholder flex justify-center mb-2">
+                                            <div class="bg-neutral text-neutral-content w-20 rounded-full">
+                                                <span class="text-3xl">
+                                                    {format!(
+                                                        "{}{}",
+                                                        player
+                                                            .clone()
+                                                            .unwrap()
+                                                            .given_name
+                                                            .chars()
+                                                            .next()
+                                                            .unwrap_or(' '),
+                                                        player
+                                                            .clone()
+                                                            .unwrap()
+                                                            .family_name
+                                                            .chars()
+                                                            .next()
+                                                            .unwrap_or(' '),
+                                                    )}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </A>
+                                }
+                            })}
+                        </Transition>
+                    </Show>
                 </Show>
             </div>
             <div class="absolute top-4 left-4">

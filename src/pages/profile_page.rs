@@ -1,5 +1,5 @@
-use leptos::{prelude::*, svg::view};
-use leptos_router::components::{Redirect, A};
+use leptos::prelude::*;
+use leptos_router::components::A;
 
 use crate::{auth::user_from_session, components::logout_button::LogoutButton};
 
@@ -49,7 +49,7 @@ pub fn ProfilePage() -> impl IntoView {
                         <label class="label cursor-pointer mt-2">
                             <span class="label-text mx-2">Utespelare</span>
                             <input type="checkbox" class="toggle" bind:checked=goalkeeper />
-                            <span class="label-text mx-2">"Målvakt   "</span>
+                            <span class="label-text mx-2">"Målvakt"</span>
                         </label>
 
                     </div>
