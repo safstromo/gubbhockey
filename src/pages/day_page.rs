@@ -1,4 +1,4 @@
-use leptos::prelude::*;
+use leptos::{prelude::*, task::spawn_local};
 use leptos_router::{
     components::{Redirect, A},
     hooks::use_params,
@@ -6,8 +6,10 @@ use leptos_router::{
 };
 
 use crate::{
-    auth::validate_admin,
-    components::{gameday_create::GamedayCreate, not_found::NotFound},
+    auth::{user_from_session, validate_admin},
+    components::{
+        gameday_card::GamedayCard, join_button::get_gamedays_by_player, not_found::NotFound,
+    },
     models::{get_players_by_gameday, Gameday},
 };
 
@@ -36,6 +38,27 @@ pub fn DayPage() -> impl IntoView {
         move || id(),
         |id| async move { get_gameday_by_id(id).await },
     );
+    let (logged_in, set_loggedin) = signal(false);
+    let (gamedays_joined, set_gamedays_joined) = signal(Vec::new());
+    let player = Resource::new(|| (), |_| async move { user_from_session().await });
+
+    Effect::new(move |_| {
+        if let Some(Ok(_player_data)) = player.get() {
+            set_loggedin.set(true);
+
+            spawn_local(async move {
+                if let Ok(gamedays) = get_gamedays_by_player().await {
+                    set_gamedays_joined.set(gamedays);
+                }
+            });
+        }
+    });
+
+    Effect::new(move |_| {
+        if !gamedays_joined.get().is_empty() {
+            players.refetch();
+        }
+    });
 
     view! {
         <div class="flex flex-col min-h-screen w-full items-center relative">
@@ -68,10 +91,11 @@ pub fn DayPage() -> impl IntoView {
                                                 view! { <NotFound /> }
                                             }
                                         >
-                                            <GamedayCreate
+                                            <GamedayCard
+                                                logged_in=logged_in
+                                                gamedays_joined=gamedays_joined
+                                                set_gamedays_joined=set_gamedays_joined
                                                 gameday=day.clone().expect("Day should be there")
-                                                set_invalidate_gamedays=None
-                                                redirect_on_delete=true
                                             />
                                         </Show>
                                     }
