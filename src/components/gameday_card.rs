@@ -1,4 +1,5 @@
 use leptos::prelude::*;
+use leptos_router::components::A;
 
 use crate::{
     components::{
@@ -17,11 +18,28 @@ pub fn GamedayCard(
 ) -> impl IntoView {
     view! {
         <div class="card flex-row items-center justify-around bg-base-100 shadow-xl border">
-            <DateCard start=gameday.start_date show_month=true />
-            <div class="flex flex-col items-center justify-evenly">
-                <TimeCard start=gameday.start_date end=gameday.end_date />
-                <NumPlayers num_players=gameday.player_count.unwrap_or(0) />
-            </div>
+            <Show
+                when=move || logged_in.get()
+                fallback=move || {
+                    view! {
+                        <DateCard start=gameday.start_date show_month=true />
+                        <div class="flex flex-col items-center justify-evenly">
+                            <TimeCard start=gameday.start_date end=gameday.end_date />
+                            <NumPlayers num_players=gameday.player_count.unwrap_or(0) />
+                        </div>
+                    }
+                }
+            >
+                <A href=format!("/day/{}", gameday.gameday_id)>
+                    <DateCard start=gameday.start_date show_month=true />
+                </A>
+                <div class="flex flex-col items-center justify-evenly">
+                    <A href=format!("/day/{}", gameday.gameday_id)>
+                        <TimeCard start=gameday.start_date end=gameday.end_date />
+                        <NumPlayers num_players=gameday.player_count.unwrap_or(0) />
+                    </A>
+                </div>
+            </Show>
             <Show
                 when=move || { is_player_joined(gamedays_joined.get(), gameday.gameday_id) }
                 fallback=move || {
