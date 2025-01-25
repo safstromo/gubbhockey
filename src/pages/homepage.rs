@@ -11,6 +11,7 @@ pub fn HomePage() -> impl IntoView {
     let player =
         use_context::<Resource<Result<Player, ServerFnError>>>().expect("player context not found");
     let (gamedays_joined, set_gamedays_joined) = signal(Vec::new());
+    player.refetch();
 
     let gamedays = Resource::new(
         move || gamedays_joined.get(),
