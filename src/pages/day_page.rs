@@ -52,7 +52,7 @@ pub fn DayPage() -> impl IntoView {
     });
 
     view! {
-        <div class="flex flex-col min-h-screen w-full items-center relative">
+        <div class="flex flex-col w-full items-center relative">
             <Suspense fallback=|| {
                 view! { <NotFound /> }
             }>

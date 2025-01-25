@@ -1,5 +1,6 @@
 pub mod date_card;
 pub mod date_picker;
+pub mod footer;
 pub mod gameday_card;
 pub mod gameday_create;
 pub mod header;

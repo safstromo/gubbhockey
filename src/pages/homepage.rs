@@ -1,5 +1,4 @@
 use leptos::{prelude::*, task::spawn_local};
-use leptos_router::components::A;
 
 use crate::{
     components::{gameday_card::GamedayCard, join_button::get_gamedays_by_player},
@@ -29,7 +28,7 @@ pub fn HomePage() -> impl IntoView {
     });
 
     view! {
-        <div class="flex flex-col min-h-screen w-full items-center relative">
+        <div class="flex flex-col w-full items-center relative">
             <h3 class="text-xl">Speldagar</h3>
             <Transition fallback=move || view! { <p>"Loading..."</p> }>
                 <ul class="flex flex-col items-center w-11/12">
@@ -51,21 +50,6 @@ pub fn HomePage() -> impl IntoView {
                     })}
                 </ul>
             </Transition>
-            <footer>
-                <div class="text-center mt-6">
-                    <A href="/terms">
-                        <p class="underline m-2">"Terms and Conditions"</p>
-                    </A>
-                    <p>"2025 Falkenbergs Gubbhockey."</p>
-                    <p>"All rights reserved."</p>
-                    <p>
-                        <a href="#" class="underline">
-                            Back to top
-                        </a>
-                    </p>
-                </div>
-            </footer>
-
         </div>
     }
 }

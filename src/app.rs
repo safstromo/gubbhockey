@@ -8,7 +8,7 @@ use reactive_stores::Store;
 
 use crate::{
     auth::{user_from_session, validate_admin},
-    components::{header::Header, not_found::NotFound},
+    components::{footer::Footer, header::Header, not_found::NotFound},
     models::{GlobalState, GlobalStateStoreFields},
     pages::{
         auth_page::AuthPage, create_page::CreatePage, day_page::DayPage, homepage::HomePage,
@@ -44,9 +44,6 @@ pub fn App() -> impl IntoView {
 
     // Provides context that manages stylesheets, titles, meta tags, etc.
     provide_meta_context();
-    // let (is_admin, set_is_admin) = signal(false);
-    // let (logged_in, set_loggedin) = signal(false);
-    // let (logged_in, set_loggedin) = signal(false);
 
     let player = Resource::new(|| (), |_| async move { user_from_session().await });
 
@@ -65,8 +62,6 @@ pub fn App() -> impl IntoView {
             }
         }
     });
-    // provide_context(is_admin);
-    // provide_context(logged_in);
     provide_context(player);
 
     let website = view! {
@@ -80,20 +75,24 @@ pub fn App() -> impl IntoView {
         // sets the document title
         <Title text="Gubbhockey" />
         // content for this welcome page
-        <Router>
-            <Header player />
-            <main>
-                <Routes fallback=|| view! { <NotFound /> }>
-                    <Route path=StaticSegment("") view=HomePage />
-
-                    <Route path=path!("/auth") view=AuthPage />
-                    <Route path=path!("/create") view=CreatePage />
-                    <Route path=path!("/day/:id") view=DayPage />
-                    <Route path=path!("/terms") view=TermsPage />
-                    <Route path=path!("/profile") view=ProfilePage />
-                </Routes>
-            </main>
-        </Router>
+        <div class="flex flex-col h-screen justify-between">
+            <Router>
+                <div>
+                    <Header player />
+                    <main>
+                        <Routes fallback=|| view! { <NotFound /> }>
+                            <Route path=StaticSegment("") view=HomePage />
+                            <Route path=path!("/auth") view=AuthPage />
+                            <Route path=path!("/create") view=CreatePage />
+                            <Route path=path!("/day/:id") view=DayPage />
+                            <Route path=path!("/terms") view=TermsPage />
+                            <Route path=path!("/profile") view=ProfilePage />
+                        </Routes>
+                    </main>
+                </div>
+                <Footer />
+            </Router>
+        </div>
     };
     website
 }

@@ -37,7 +37,7 @@ pub fn CreatePage() -> impl IntoView {
                 let is_admin = admin_check.await;
                 view! {
                     <Show when=move || { is_admin } fallback=|| view! { <Redirect path="/" /> }>
-                        <div class="flex flex-col min-h-screen w-full items-center relative">
+                        <div class="flex flex-col w-full items-center relative">
                             <DatePicker set_invalidate_gamedays />
                             <Transition fallback=move || view! { <p>"Loading..."</p> }>
                                 <h3 class="text-center text-xl mt-6">Alla Speldagar</h3>

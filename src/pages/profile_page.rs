@@ -18,7 +18,7 @@ pub fn ProfilePage() -> impl IntoView {
     view! {
         <Suspense fallback=move || {
             view! {
-                <div class="flex flex-col min-h-screen w-full items-center justify-center">
+                <div class="flex flex-col w-full items-center justify-center">
                     <h3 class="text-xl text-center">"Logging in..."</h3>
                     <span class="loading loading-dots loading-lg"></span>
                 </div>
@@ -27,7 +27,7 @@ pub fn ProfilePage() -> impl IntoView {
             {move || Suspend::new(async move {
                 let player = player.await.expect("no player found");
                 view! {
-                    <div class="flex flex-col min-h-screen w-full items-center">
+                    <div class="flex flex-col w-full items-center">
                         <div class="avatar placeholder mb-6">
                             <div class="bg-neutral text-neutral-content w-24 rounded-full">
                                 <span class="text-3xl">
