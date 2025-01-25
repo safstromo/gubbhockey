@@ -1,15 +1,9 @@
 use leptos::prelude::*;
-use leptos_router::components::A;
 
 #[component]
 pub fn TermsPage() -> impl IntoView {
     view! {
         <div class="flex flex-col min-h-screen">
-            <div class="flex justify-center">
-                <A href="/">
-                    <img src="Logo-nobg.png" alt="Logo" class="h-60 w-60" />
-                </A>
-            </div>
             <header class="pb-6">
                 <div class="container mx-auto px-4">
                     <h1 class="text-3xl font-bold text-center">Terms and Conditions</h1>

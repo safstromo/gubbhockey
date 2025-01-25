@@ -1,21 +1,24 @@
 use leptos::prelude::*;
 use leptos_router::components::A;
+use reactive_stores::Store;
 
 use crate::{
     components::{
         date_card::DateCard, join_button::JoinButton, leave_button::LeaveButton,
         num_players::NumPlayers, time_card::TimeCard,
     },
-    models::Gameday,
+    models::{Gameday, GlobalState, GlobalStateStoreFields},
 };
 
 #[component]
 pub fn GamedayCard(
     gameday: Gameday,
-    logged_in: ReadSignal<bool>,
     gamedays_joined: ReadSignal<Vec<Gameday>>,
     set_gamedays_joined: WriteSignal<Vec<Gameday>>,
 ) -> impl IntoView {
+    let state = expect_context::<Store<GlobalState>>();
+    let logged_in = state.logged_in();
+
     view! {
         <div class="card flex-row items-center justify-around bg-base-100 shadow-xl border">
             <Show
@@ -45,7 +48,6 @@ pub fn GamedayCard(
                 fallback=move || {
                     view! {
                         <JoinButton
-                            logged_in=logged_in
                             gameday_id=gameday.gameday_id
                             set_gamedays_joined=set_gamedays_joined
                         />

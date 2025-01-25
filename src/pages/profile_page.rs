@@ -1,11 +1,11 @@
 use leptos::{logging::log, prelude::*, task::spawn_local};
-use leptos_router::components::A;
 
-use crate::{auth::user_from_session, components::logout_button::LogoutButton};
+use crate::{components::logout_button::LogoutButton, models::Player};
 
 #[component]
 pub fn ProfilePage() -> impl IntoView {
-    let player = Resource::new(|| (), |_| async move { user_from_session().await });
+    let player =
+        use_context::<Resource<Result<Player, ServerFnError>>>().expect("player context not found");
 
     let goalkeeper = RwSignal::new(false);
 
@@ -27,16 +27,7 @@ pub fn ProfilePage() -> impl IntoView {
             {move || Suspend::new(async move {
                 let player = player.await.expect("no player found");
                 view! {
-                    <div class="flex flex-col min-h-screen w-full items-center relative">
-                        <div class="absolute top-4 right-4">
-                            <LogoutButton />
-                        </div>
-
-                        <div class="flex justify-center mb-10">
-                            <A href="/">
-                                <img src="Logo-nobg.png" alt="Logo" class="h-60 w-60" />
-                            </A>
-                        </div>
+                    <div class="flex flex-col min-h-screen w-full items-center">
                         <div class="avatar placeholder mb-6">
                             <div class="bg-neutral text-neutral-content w-24 rounded-full">
                                 <span class="text-3xl">
@@ -70,6 +61,9 @@ pub fn ProfilePage() -> impl IntoView {
                             />
                             <span class="label-text mx-2">"Målvakt"</span>
                         </label>
+                        <div class="mt-20">
+                            <LogoutButton />
+                        </div>
 
                     </div>
                 }

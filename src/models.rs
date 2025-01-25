@@ -1,5 +1,6 @@
 use chrono::{DateTime, Utc};
 use leptos::prelude::*;
+use reactive_stores::Store;
 use serde::{Deserialize, Serialize};
 #[cfg(feature = "ssr")]
 use sqlx::FromRow;
@@ -24,6 +25,12 @@ pub struct UserInfo {
     pub email: String,
 }
 
+#[derive(Clone, Debug, Default, Store)]
+pub struct GlobalState {
+    pub logged_in: bool,
+    pub is_admin: bool,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[cfg_attr(feature = "ssr", derive(FromRow))]
 pub struct Gameday {
@@ -45,11 +52,11 @@ pub struct PkceStore {
 
 #[server]
 pub async fn get_players_by_gameday(gameday_id: i32) -> Result<Vec<Player>, ServerFnError> {
-    use crate::auth::validate_admin;
+    use crate::auth::user_from_session;
     use tracing::{error, info};
 
     use crate::database::get_db;
-    if let Err(err) = validate_admin().await {
+    if let Err(err) = user_from_session().await {
         return Err(err);
     }
 

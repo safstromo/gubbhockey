@@ -1,16 +1,11 @@
 use leptos::{prelude::*, task::spawn_local};
-use leptos_router::{
-    components::{Redirect, A},
-    hooks::use_params,
-    params::Params,
-};
+use leptos_router::{components::Redirect, hooks::use_params, params::Params};
 
 use crate::{
-    auth::{user_from_session, validate_admin},
     components::{
         gameday_card::GamedayCard, join_button::get_gamedays_by_player, not_found::NotFound,
     },
-    models::{get_players_by_gameday, Gameday},
+    models::{get_players_by_gameday, Gameday, Player},
 };
 
 #[component]
@@ -25,10 +20,8 @@ pub fn DayPage() -> impl IntoView {
             .unwrap_or(0)
     };
 
-    let admin_check = Resource::new(
-        || (),
-        |_| async move { validate_admin().await.unwrap_or(false) },
-    );
+    let player =
+        use_context::<Resource<Result<Player, ServerFnError>>>().expect("player context not found");
 
     let players = Resource::new(
         move || id(),
@@ -38,13 +31,11 @@ pub fn DayPage() -> impl IntoView {
         move || id(),
         |id| async move { get_gameday_by_id(id).await },
     );
-    let (logged_in, set_loggedin) = signal(false);
     let (gamedays_joined, set_gamedays_joined) = signal(Vec::new());
-    let player = Resource::new(|| (), |_| async move { user_from_session().await });
 
     Effect::new(move |_| {
         if let Some(Ok(_player_data)) = player.get() {
-            set_loggedin.set(true);
+            // set_loggedin.set(true);
 
             spawn_local(async move {
                 if let Ok(gamedays) = get_gamedays_by_player().await {
@@ -62,22 +53,16 @@ pub fn DayPage() -> impl IntoView {
 
     view! {
         <div class="flex flex-col min-h-screen w-full items-center relative">
-            <A href="/">
-                <h1 class="text-4xl text-center mt-14 mb-6">"Falkenbergs Gubbhockey"</h1>
-            </A>
             <Suspense fallback=|| {
                 view! { <NotFound /> }
             }>
                 {move || Suspend::new(async move {
-                    let is_admin = admin_check.await;
+                    let player_loggedin = player.await;
                     view! {
-                        <Show when=move || { is_admin } fallback=|| view! { <Redirect path="/" /> }>
-                            <div class="absolute top-4 left-4">
-                                <A href="/create">
-                                    <button class="btn btn-xs btn-success">Adminpanel</button>
-                                </A>
-                            </div>
-
+                        <Show
+                            when=move || { player_loggedin.is_ok() }
+                            fallback=|| view! { <Redirect path="/" /> }
+                        >
                             <Transition fallback=move || {
                                 view! { <p>"Loading..."</p> }
                             }>
@@ -92,7 +77,6 @@ pub fn DayPage() -> impl IntoView {
                                             }
                                         >
                                             <GamedayCard
-                                                logged_in=logged_in
                                                 gamedays_joined=gamedays_joined
                                                 set_gamedays_joined=set_gamedays_joined
                                                 gameday=day.clone().expect("Day should be there")

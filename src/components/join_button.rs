@@ -1,13 +1,16 @@
 use leptos::{prelude::*, task::spawn_local};
+use reactive_stores::Store;
 
-use crate::models::Gameday;
+use crate::models::{Gameday, GlobalState, GlobalStateStoreFields};
 
 #[component]
 pub fn JoinButton(
-    logged_in: ReadSignal<bool>,
     gameday_id: i32,
     set_gamedays_joined: WriteSignal<Vec<Gameday>>,
 ) -> impl IntoView {
+    let state = expect_context::<Store<GlobalState>>();
+    let logged_in = state.logged_in();
+
     view! {
         <button
             class="btn btn-success h-20 m-2 flex-col"

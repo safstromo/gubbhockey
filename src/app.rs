@@ -1,12 +1,15 @@
-use leptos::prelude::*;
+use leptos::{prelude::*, task::spawn_local};
 use leptos_meta::{provide_meta_context, Link, MetaTags, Stylesheet, Title};
 use leptos_router::{
     components::{Route, Router, Routes},
     path, StaticSegment,
 };
+use reactive_stores::Store;
 
 use crate::{
-    components::not_found::NotFound,
+    auth::{user_from_session, validate_admin},
+    components::{header::Header, not_found::NotFound},
+    models::{GlobalState, GlobalStateStoreFields},
     pages::{
         auth_page::AuthPage, create_page::CreatePage, day_page::DayPage, homepage::HomePage,
         profile_page::ProfilePage, terms_page::TermsPage,
@@ -33,8 +36,38 @@ pub fn shell(options: LeptosOptions) -> impl IntoView {
 
 #[component]
 pub fn App() -> impl IntoView {
+    let store = Store::new(GlobalState {
+        logged_in: false,
+        is_admin: false,
+    });
+    provide_context(store);
+
     // Provides context that manages stylesheets, titles, meta tags, etc.
     provide_meta_context();
+    // let (is_admin, set_is_admin) = signal(false);
+    // let (logged_in, set_loggedin) = signal(false);
+    // let (logged_in, set_loggedin) = signal(false);
+
+    let player = Resource::new(|| (), |_| async move { user_from_session().await });
+
+    Effect::new(move |_| {
+        if let Some(Ok(player_data)) = player.get() {
+            // set_loggedin.set(true);
+            store.logged_in().set(true);
+            if let Some(access_group) = player_data.access_group {
+                if access_group == *"admin" {
+                    spawn_local(async move {
+                        if let Ok(admin) = validate_admin().await {
+                            store.is_admin().set(admin);
+                        }
+                    });
+                }
+            }
+        }
+    });
+    // provide_context(is_admin);
+    // provide_context(logged_in);
+    provide_context(player);
 
     let website = view! {
         // injects a stylesheet into the document <head>
@@ -46,9 +79,9 @@ pub fn App() -> impl IntoView {
         />
         // sets the document title
         <Title text="Gubbhockey" />
-
         // content for this welcome page
         <Router>
+            <Header player />
             <main>
                 <Routes fallback=|| view! { <NotFound /> }>
                     <Route path=StaticSegment("") view=HomePage />

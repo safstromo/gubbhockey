@@ -1,5 +1,5 @@
 use leptos::prelude::*;
-use leptos_router::components::{Redirect, A};
+use leptos_router::components::Redirect;
 
 use crate::{
     auth::validate_admin,
@@ -38,11 +38,6 @@ pub fn CreatePage() -> impl IntoView {
                 view! {
                     <Show when=move || { is_admin } fallback=|| view! { <Redirect path="/" /> }>
                         <div class="flex flex-col min-h-screen w-full items-center relative">
-                            <div class="flex justify-center">
-                                <A href="/">
-                                    <img src="Logo-nobg.png" alt="Logo" class="h-60 w-60" />
-                                </A>
-                            </div>
                             <DatePicker set_invalidate_gamedays />
                             <Transition fallback=move || view! { <p>"Loading..."</p> }>
                                 <h3 class="text-center text-xl mt-6">Alla Speldagar</h3>
