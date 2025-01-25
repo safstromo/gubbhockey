@@ -160,7 +160,7 @@ async fn insert_player(userinfo: UserInfo) -> Result<Player, ServerFnError> {
         r#"
         INSERT INTO player (name, given_name, family_name, email, access_group)
         VALUES ($1, $2, $3, $4, $5)
-        RETURNING player_id, name, given_name, family_name, email, access_group
+        RETURNING player_id, name, given_name, family_name, email, access_group, is_goalkeeper
         "#,
         userinfo.name,
         userinfo.given_name,
@@ -194,7 +194,7 @@ async fn get_player_by_email(email: String) -> Result<Option<Player>, ServerFnEr
     match sqlx::query_as!(
         Player,
         r#"
-        SELECT p.player_id, p.name, p.given_name, p.family_name, p.email, p.access_group
+        SELECT p.player_id, p.name, p.given_name, p.family_name, p.email, p.access_group, p.is_goalkeeper
         FROM player p
         WHERE p.email = $1
         "#,

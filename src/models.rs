@@ -13,6 +13,7 @@ pub struct Player {
     pub family_name: String,
     pub email: String,
     pub access_group: Option<String>,
+    pub is_goalkeeper: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -62,7 +63,8 @@ pub async fn get_players_by_gameday(gameday_id: i32) -> Result<Vec<Player>, Serv
             p.given_name,
             p.family_name,
             p.email,
-            p.access_group
+            p.access_group,
+            p.is_goalkeeper
         FROM 
             Player p
         JOIN 

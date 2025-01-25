@@ -1,4 +1,4 @@
-use leptos::prelude::*;
+use leptos::{logging::log, prelude::*, task::spawn_local};
 use leptos_router::components::A;
 
 use crate::{auth::user_from_session, components::logout_button::LogoutButton};
@@ -8,6 +8,12 @@ pub fn ProfilePage() -> impl IntoView {
     let player = Resource::new(|| (), |_| async move { user_from_session().await });
 
     let goalkeeper = RwSignal::new(false);
+
+    Effect::new(move |_| {
+        if let Some(Ok(player_data)) = player.get() {
+            goalkeeper.set(player_data.is_goalkeeper);
+        }
+    });
 
     view! {
         <Suspense fallback=move || {
@@ -48,7 +54,20 @@ pub fn ProfilePage() -> impl IntoView {
 
                         <label class="label cursor-pointer mt-2">
                             <span class="label-text mx-2">Utespelare</span>
-                            <input type="checkbox" class="toggle" bind:checked=goalkeeper />
+                            <input
+                                type="checkbox"
+                                class="toggle"
+                                bind:checked=goalkeeper
+                                on:change=move |_| {
+                                    let change_made = goalkeeper.get();
+                                    spawn_local(async move {
+                                        if let Err(err) = update_player_position(change_made).await
+                                        {
+                                            log!("Failed to update position: {:?}", err);
+                                        }
+                                    });
+                                }
+                            />
                             <span class="label-text mx-2">"Målvakt"</span>
                         </label>
 
@@ -56,5 +75,45 @@ pub fn ProfilePage() -> impl IntoView {
                 }
             })}
         </Suspense>
+    }
+}
+
+#[server]
+async fn update_player_position(is_goalkeeper: bool) -> Result<(), ServerFnError> {
+    use crate::auth::user_from_session;
+    use crate::database::get_db;
+    use tracing::{error, info};
+
+    match user_from_session().await {
+        Ok(user) => {
+            let pool = get_db();
+            match sqlx::query!(
+                r#"
+        UPDATE player
+        SET is_goalkeeper = $1
+        WHERE player_id = $2
+        "#,
+                is_goalkeeper,
+                user.player_id
+            )
+            .execute(pool)
+            .await
+            {
+                Ok(_) => {
+                    info!(
+                        "Player: {:?} set goalkeeper: {:?}",
+                        user.player_id, is_goalkeeper
+                    );
+                    Ok(())
+                }
+                Err(e) => {
+                    error!("Database error: {:?}", e);
+                    Err(ServerFnError::ServerError(
+                        "Failed to add player to gameday.".to_string(),
+                    ))
+                }
+            }
+        }
+        Err(err) => Err(err),
     }
 }

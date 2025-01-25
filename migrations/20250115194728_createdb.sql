@@ -5,7 +5,9 @@ CREATE TABLE IF NOT EXISTS Player (
     given_name VARCHAR(50) NOT NULL,
     family_name VARCHAR(50) NOT NULL,
     email VARCHAR(100) UNIQUE NOT NULL,
-    access_group VARCHAR(20) NOT NULL
+    access_group VARCHAR(20) NOT NULL,
+    is_goalkeeper bool DEFAULT FALSE NOT NULL
+
 );
 
 -- Gamedays Table

@@ -262,7 +262,7 @@ async fn get_player_by_session(session_id: uuid::Uuid) -> Result<Option<Player>,
     match sqlx::query_as!(
         Player,
         r#"
-        SELECT p.player_id, p.name, p.given_name, p.family_name, p.email, p.access_group
+        SELECT p.player_id, p.name, p.given_name, p.family_name, p.email, p.access_group, is_goalkeeper
         FROM session s
         JOIN player p ON s.player_id = p.player_id
         WHERE s.session_id = $1

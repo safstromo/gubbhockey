@@ -5,7 +5,6 @@ use crate::{
     auth::{user_from_session, validate_admin},
     components::{
         gameday_card::GamedayCard, join_button::get_gamedays_by_player, login_button::LoginButton,
-        logout_button::LogoutButton,
     },
     models::Gameday,
 };
