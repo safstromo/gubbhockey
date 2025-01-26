@@ -87,6 +87,7 @@ pub fn App() -> impl IntoView {
                             <Route path=path!("/day/:id") view=DayPage />
                             <Route path=path!("/cup/:id") view=CupPage />
                             <Route path=path!("/terms") view=TermsPage />
+                            <Route path=path!("/policy") view=TermsPage />
                             <Route path=path!("/profile") view=ProfilePage />
                         </Routes>
                     </main>
