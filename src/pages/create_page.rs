@@ -3,7 +3,7 @@ use leptos_router::components::Redirect;
 
 use crate::{
     auth::validate_admin,
-    components::{date_picker::DatePicker, gameday_create::GamedayCreate},
+    components::{cup_form::CupForm, date_picker::DatePicker, gameday_create::GamedayCreate},
     models::Gameday,
 };
 
@@ -38,6 +38,7 @@ pub fn CreatePage() -> impl IntoView {
                 view! {
                     <Show when=move || { is_admin } fallback=|| view! { <Redirect path="/" /> }>
                         <div class="flex flex-col w-full items-center relative">
+                            <CupForm />
                             <DatePicker set_invalidate_gamedays />
                             <Transition fallback=move || view! { <p>"Loading..."</p> }>
                                 <h3 class="text-center text-xl mt-6">Alla Speldagar</h3>
