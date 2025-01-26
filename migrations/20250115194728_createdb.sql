@@ -53,8 +53,8 @@ CREATE TABLE IF NOT EXISTS Cup (
     cup_id SERIAL PRIMARY KEY,
     start_date TIMESTAMPTZ NOT NULL,
     end_date TIMESTAMPTZ NOT NULL,
-    title VARCHAR(100),
-    info TEXT
+    title VARCHAR(100) NOT NULL,
+    info TEXT NOT NULL
 );
 
 -- Join Table for Player-Cup relationship

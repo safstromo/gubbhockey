@@ -18,6 +18,13 @@ pub struct Player {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "ssr", derive(FromRow))]
+pub struct CupPlayer {
+    pub name: String,
+    pub position: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UserInfo {
     pub name: String,
     pub given_name: String,
@@ -37,6 +44,16 @@ pub struct Gameday {
     pub gameday_id: i32,
     pub start_date: DateTime<Utc>,
     pub end_date: DateTime<Utc>,
+    pub player_count: Option<i64>,
+}
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[cfg_attr(feature = "ssr", derive(FromRow))]
+pub struct Cup {
+    pub cup_id: i32,
+    pub start_date: DateTime<Utc>,
+    pub end_date: DateTime<Utc>,
+    pub title: Option<String>,
+    pub info: Option<String>,
     pub player_count: Option<i64>,
 }
 
