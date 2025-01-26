@@ -7,20 +7,24 @@ pub fn LeaveCupButton(
     cup_id: i32,
     cups_joined: ReadSignal<Vec<Cup>>,
     set_cups_joined: WriteSignal<Vec<Cup>>,
+    set_refetch_players: WriteSignal<bool>,
 ) -> impl IntoView {
     view! {
+        <h3 class="text-center underline m-2">
+            "Du är anmäld till denna cuppen, vill du avanmäla dig?"
+        </h3>
         <button
-            class="btn btn-error h-20 m-2 flex-col"
+            class="btn btn-error h-16 m-2 flex-col"
             on:click=move |_| {
                 spawn_local(async move {
                     if leave_cup(cup_id).await.is_ok() {
                         delete_joined(set_cups_joined, cups_joined, cup_id);
+                        set_refetch_players.set(true);
                     }
                 });
             }
         >
-            <p class="font-bold">Kommer</p>
-            <p class="font-bold">inte</p>
+            <p class="font-bold">"Jag kommer inte."</p>
         </button>
     }
 }

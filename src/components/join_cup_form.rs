@@ -1,8 +1,26 @@
-use leptos::prelude::*;
+use leptos::{prelude::*, task::spawn_local};
+
+use crate::{models::Cup, pages::cup_page::get_cups_by_player};
 
 #[component]
-pub fn JoinCupForm(cup_id: i32) -> impl IntoView {
+pub fn JoinCupForm(
+    cup_id: i32,
+    set_refetch_players: WriteSignal<bool>,
+    set_cups_joined: WriteSignal<Vec<Cup>>,
+) -> impl IntoView {
     let submit = ServerAction::<JoinCup>::new();
+
+    let value = submit.value();
+    Effect::new(move |_| {
+        if value.get().is_some() {
+            set_refetch_players.set(true);
+
+            spawn_local(async move {
+                add_joined(set_cups_joined).await;
+            });
+        }
+    });
+
     view! {
         <ActionForm action=submit>
             <div class="flex flex-col m-2 mb-6">
@@ -21,6 +39,12 @@ pub fn JoinCupForm(cup_id: i32) -> impl IntoView {
                 </button>
             </div>
         </ActionForm>
+    }
+}
+
+async fn add_joined(set_cups_joined: WriteSignal<Vec<Cup>>) {
+    if let Ok(cups) = get_cups_by_player().await {
+        set_cups_joined.set(cups);
     }
 }
 

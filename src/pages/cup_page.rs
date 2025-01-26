@@ -30,6 +30,7 @@ pub fn CupPage() -> impl IntoView {
     let cup = Resource::new(move || id(), |id| async move { get_cup_by_id(id).await });
 
     let (cups_joined, set_cups_joined) = signal(Vec::new());
+    let (refetch_players, set_refetch_players) = signal(false);
 
     Effect::new(move |_| {
         if let Some(Ok(_player_data)) = player.get() {
@@ -38,6 +39,13 @@ pub fn CupPage() -> impl IntoView {
                     set_cups_joined.set(gamedays);
                 }
             });
+        }
+    });
+
+    Effect::new(move |_| {
+        if refetch_players.get() {
+            players.refetch();
+            set_refetch_players.set(false);
         }
     });
 
@@ -75,10 +83,21 @@ pub fn CupPage() -> impl IntoView {
                                             <Show
                                                 when=move || { is_player_joined(cups_joined.get(), id()) }
                                                 fallback=move || {
-                                                    view! { <JoinCupForm cup_id=id() /> }
+                                                    view! {
+                                                        <JoinCupForm
+                                                            cup_id=id()
+                                                            set_refetch_players
+                                                            set_cups_joined
+                                                        />
+                                                    }
                                                 }
                                             >
-                                                <LeaveCupButton cup_id=id() cups_joined set_cups_joined />
+                                                <LeaveCupButton
+                                                    cup_id=id()
+                                                    cups_joined
+                                                    set_cups_joined
+                                                    set_refetch_players
+                                                />
                                             </Show>
                                         </Show>
                                     }
@@ -162,12 +181,6 @@ pub fn CupPage() -> impl IntoView {
 #[derive(Params, PartialEq)]
 struct CupParam {
     id: Option<i32>,
-}
-
-async fn add_joined(set_cups_joined: WriteSignal<Vec<Cup>>) {
-    if let Ok(cups) = get_cups_by_player().await {
-        set_cups_joined.set(cups);
-    }
 }
 
 fn is_player_joined(cups_joined: Vec<Cup>, cup_id: i32) -> bool {
@@ -259,7 +272,7 @@ async fn get_players_by_cup_id(id: i32) -> Result<Vec<CupPlayer>, ServerFnError>
 }
 
 #[server]
-async fn get_cups_by_player() -> Result<Vec<Cup>, ServerFnError> {
+pub async fn get_cups_by_player() -> Result<Vec<Cup>, ServerFnError> {
     use crate::auth::user_from_session;
     use crate::database::get_db;
     use tracing::{error, info};
