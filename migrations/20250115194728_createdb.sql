@@ -34,6 +34,8 @@ CREATE TABLE IF NOT EXISTS pkce_store (
     expires_at TIMESTAMPTZ NOT NULL                 -- Expiration timestamp
 );
 
+DROP INDEX IF EXISTS idx_csrf_token;
+
 -- Index to quickly look up by CSRF token
 CREATE UNIQUE INDEX idx_csrf_token ON pkce_store (csrf_token);
 
@@ -45,3 +47,23 @@ CREATE TABLE IF NOT EXISTS Session (
 
     FOREIGN KEY (player_id) REFERENCES Player(player_id) ON DELETE CASCADE
 );
+
+-- Cup Table
+CREATE TABLE IF NOT EXISTS Cup (
+    cup_id SERIAL PRIMARY KEY,
+    start_date TIMESTAMPTZ NOT NULL,
+    end_date TIMESTAMPTZ NOT NULL,
+    title VARCHAR(100),
+    info TEXT
+);
+
+-- Join Table for Player-Cup relationship
+CREATE TABLE IF NOT EXISTS Player_Cup (
+    player_id INT NOT NULL,
+    cup_id INT NOT NULL,
+    position VARCHAR(50) NOT NULL,
+    PRIMARY KEY (player_id, cup_id),
+    FOREIGN KEY (player_id) REFERENCES Player(player_id) ON DELETE CASCADE,
+    FOREIGN KEY (cup_id) REFERENCES Cup(cup_id) ON DELETE CASCADE
+);
+
