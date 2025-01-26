@@ -2,7 +2,9 @@ use leptos::{prelude::*, task::spawn_local};
 use leptos_router::{components::Redirect, hooks::use_params, params::Params};
 
 use crate::{
-    components::{join_cup_form::JoinCupForm, not_found::NotFound},
+    components::{
+        join_cup_form::JoinCupForm, leave_cup_button::LeaveCupButton, not_found::NotFound,
+    },
     models::{Cup, CupPlayer, Player},
 };
 
@@ -70,7 +72,14 @@ pub fn CupPage() -> impl IntoView {
                                             <p class="text-center m-3">
                                                 {cup.clone().expect("cup should be there").info}
                                             </p>
-                                            <JoinCupForm cup_id=cup.clone().expect("cupid").cup_id />
+                                            <Show
+                                                when=move || { is_player_joined(cups_joined.get(), id()) }
+                                                fallback=move || {
+                                                    view! { <JoinCupForm cup_id=id() /> }
+                                                }
+                                            >
+                                                <LeaveCupButton cup_id=id() cups_joined set_cups_joined />
+                                            </Show>
                                         </Show>
                                     }
                                 })}
@@ -159,6 +168,10 @@ async fn add_joined(set_cups_joined: WriteSignal<Vec<Cup>>) {
     if let Ok(cups) = get_cups_by_player().await {
         set_cups_joined.set(cups);
     }
+}
+
+fn is_player_joined(cups_joined: Vec<Cup>, cup_id: i32) -> bool {
+    cups_joined.iter().any(|cup| cup.cup_id == cup_id)
 }
 
 #[server]

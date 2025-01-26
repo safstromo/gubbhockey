@@ -7,6 +7,7 @@ pub mod header;
 pub mod join_button;
 pub mod join_cup_form;
 pub mod leave_button;
+pub mod leave_cup_button;
 pub mod login_button;
 pub mod logout_button;
 pub mod not_found;
