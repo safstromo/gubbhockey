@@ -4,7 +4,7 @@ use leptos_router::components::Redirect;
 use crate::{
     auth::validate_admin,
     components::{
-        cup_card::CupCard, cup_form::CupForm, date_picker::DatePicker,
+        cup_card::CupCard, cup_form::CupForm, date_picker::DatePicker, event_tab::EventTab,
         gameday_create::GamedayCreate,
     },
     models::{Cup, Gameday},
@@ -67,29 +67,7 @@ pub fn CreatePage() -> impl IntoView {
                                     </li>
                                 </ul>
                             </div>
-
-                            <div role="tablist" class="tabs tabs-boxed m-4">
-                                <a
-                                    role="tab"
-                                    class="tab"
-                                    class:tab-active=move || tab_change.get()
-                                    on:click=move |_| {
-                                        set_tab_change.set(!tab_change.get());
-                                    }
-                                >
-                                    Speldagar
-                                </a>
-                                <a
-                                    role="tab"
-                                    class="tab "
-                                    class:tab-active=move || !tab_change.get()
-                                    on:click=move |_| {
-                                        set_tab_change.set(!tab_change.get());
-                                    }
-                                >
-                                    Cupper
-                                </a>
-                            </div>
+                            <EventTab tab_change set_tab_change />
                             <Show when=move || { show_create_day.get() }>
                                 <DatePicker set_invalidate_gamedays />
                             </Show>

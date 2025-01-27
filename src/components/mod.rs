@@ -2,6 +2,7 @@ pub mod cup_card;
 pub mod cup_form;
 pub mod date_card;
 pub mod date_picker;
+pub mod event_tab;
 pub mod footer;
 pub mod gameday_card;
 pub mod gameday_create;
