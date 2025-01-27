@@ -109,7 +109,7 @@ pub fn CreatePage() -> impl IntoView {
                                                         .map(|cup| {
                                                             view! {
                                                                 <li class="flex justify-center my-2">
-                                                                    <CupCard cup />
+                                                                    <CupCard cup edit_button=true />
                                                                 </li>
                                                             }
                                                         })

@@ -26,7 +26,7 @@ pub fn GamedayCard(
                 fallback=move || {
                     view! {
                         <DateCard start=gameday.start_date show_month=true />
-                        <div class="flex flex-col items-center justify-evenly">
+                        <div class="flex flex-col items-center justify-evenly mr-2">
                             <TimeCard start=gameday.start_date end=gameday.end_date />
                             <NumPlayers num_players=gameday.player_count.unwrap_or(0) />
                         </div>
@@ -36,7 +36,7 @@ pub fn GamedayCard(
                 <A href=format!("/day/{}", gameday.gameday_id)>
                     <DateCard start=gameday.start_date show_month=true />
                 </A>
-                <div class="flex flex-col items-center justify-evenly">
+                <div class="flex flex-col items-center justify-evenly mr-2">
                     <A href=format!("/day/{}", gameday.gameday_id)>
                         <TimeCard start=gameday.start_date end=gameday.end_date />
                         <NumPlayers num_players=gameday.player_count.unwrap_or(0) />
