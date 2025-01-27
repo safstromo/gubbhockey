@@ -14,9 +14,9 @@ pub fn CupForm() -> impl IntoView {
     });
 
     view! {
-        <ActionForm action=submit>
-            <div class="flex flex-col justify-center m-2">
-                <div class="max-w-40">
+        <div class="flex flex-col items-center justify-center m-2 w-11/12">
+            <ActionForm action=submit>
+                <div class="flex-col max-w-40">
                     <label for="input_cup[date]">Datum</label>
                     <input
                         type="date"
@@ -24,7 +24,7 @@ pub fn CupForm() -> impl IntoView {
                         name="input_cup[date]"
                         class="input input-bordered"
                     />
-                    <div class="flex gap-2 mt-2">
+                    <div class="flex gap-2 m-2">
                         <div class="flex-col">
                             <label for="input_cup[start]" class="">
                                 Start
@@ -49,30 +49,36 @@ pub fn CupForm() -> impl IntoView {
                         </div>
                     </div>
                 </div>
-                <label for="input_cup[title]" class="mt-2">
-                    Titel
-                </label>
-                <input
-                    type="text"
-                    placeholder="Falcon cup"
-                    required
-                    name="input_cup[title]"
-                    class="input input-bordered"
-                />
-                <label for="input_cup[info]" class="mt-2">
-                    Info
-                </label>
-                <textarea
-                    placeholder="Info om cuppen"
-                    required
-                    name="input_cup[info]"
-                    class="textarea textarea-bordered min-h-56"
-                />
-                <button class="btn btn-success mt-4 w-40" type="submit">
-                    Skapa cup
-                </button>
-            </div>
-        </ActionForm>
+                <div class="flex flex-col m-2">
+                    <label for="input_cup[title]" class="mt-2">
+                        Titel
+                    </label>
+                    <input
+                        type="text"
+                        placeholder="Falcon cup"
+                        required
+                        name="input_cup[title]"
+                        class="input input-bordered"
+                    />
+                </div>
+                <div class="flex flex-col m-2">
+                    <label for="input_cup[info]" class="mt-2">
+                        Info
+                    </label>
+                    <textarea
+                        placeholder="Info om cuppen"
+                        required
+                        name="input_cup[info]"
+                        class="textarea textarea-bordered min-h-56"
+                    />
+                </div>
+                <div class="flex justify-center m-2">
+                    <button class="btn btn-success w-40" type="submit">
+                        Skapa cup
+                    </button>
+                </div>
+            </ActionForm>
+        </div>
     }
 }
 
