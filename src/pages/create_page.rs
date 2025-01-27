@@ -4,7 +4,7 @@ use leptos_router::components::Redirect;
 use crate::{
     auth::validate_admin,
     components::{cup_form::CupForm, date_picker::DatePicker, gameday_create::GamedayCreate},
-    models::Gameday,
+    models::{Cup, Gameday},
 };
 
 #[component]
@@ -15,7 +15,9 @@ pub fn CreatePage() -> impl IntoView {
     );
 
     let (invalidate_gamedays, set_invalidate_gamedays) = signal(false);
+    let (tab_change, set_tab_change) = signal(false);
     let gamedays = Resource::new(|| (), |_| async move { get_all_gamedays().await });
+    let cups = Resource::new(|| (), |_| async move { get_all_cups().await });
 
     Effect::new(move || {
         if invalidate_gamedays.get() {
@@ -40,27 +42,74 @@ pub fn CreatePage() -> impl IntoView {
                         <div class="flex flex-col w-full items-center relative">
                             <CupForm />
                             <DatePicker set_invalidate_gamedays />
-                            <Transition fallback=move || view! { <p>"Loading..."</p> }>
-                                <h3 class="text-center text-xl mt-6">Alla Speldagar</h3>
-                                <ul class="flex flex-col items-center w-11/12">
-                                    {move || Suspend::new(async move {
-                                        let days = gamedays.await.expect("No gamedays found");
-                                        days.into_iter()
-                                            .map(|day| {
-                                                view! {
-                                                    <li class="my-2">
-                                                        <GamedayCreate
-                                                            gameday=day
-                                                            set_invalidate_gamedays=Some(set_invalidate_gamedays)
-                                                            redirect_on_delete=false
-                                                        />
-                                                    </li>
-                                                }
-                                            })
-                                            .collect_view()
-                                    })}
-                                </ul>
-                            </Transition>
+                            <div role="tablist" class="tabs tabs-boxed m-4">
+                                <a
+                                    role="tab"
+                                    class="tab"
+                                    class:tab-active=move || tab_change.get()
+                                    on:click=move |_| {
+                                        set_tab_change.set(!tab_change.get());
+                                    }
+                                >
+                                    Speldagar
+                                </a>
+                                <a
+                                    role="tab"
+                                    class="tab "
+                                    class:tab-active=move || !tab_change.get()
+                                    on:click=move |_| {
+                                        set_tab_change.set(!tab_change.get());
+                                    }
+                                >
+                                    Cupper
+                                </a>
+                            </div>
+                            <Show
+                                when=move || { tab_change.get() }
+                                fallback=move || {
+                                    view! {
+                                        <Transition fallback=move || view! { <p>"Loading..."</p> }>
+                                            <h3 class="text-center text-xl mt-2">Kommande cupper</h3>
+                                            <ul class="flex flex-col items-center w-11/12">
+                                                {move || Suspend::new(async move {
+                                                    let cups = cups.await.expect("No cups found");
+                                                    cups.into_iter()
+                                                        .map(|cup| {
+                                                            view! {
+                                                                <li class="my-2">
+                                                                    <p>{cup.title}</p>
+                                                                </li>
+                                                            }
+                                                        })
+                                                        .collect_view()
+                                                })}
+                                            </ul>
+                                        </Transition>
+                                    }
+                                }
+                            >
+                                <Transition fallback=move || view! { <p>"Loading..."</p> }>
+                                    <h3 class="text-center text-xl mt-2">Kommande Speldagar</h3>
+                                    <ul class="flex flex-col items-center w-11/12">
+                                        {move || Suspend::new(async move {
+                                            let days = gamedays.await.expect("No gamedays found");
+                                            days.into_iter()
+                                                .map(|day| {
+                                                    view! {
+                                                        <li class="my-2">
+                                                            <GamedayCreate
+                                                                gameday=day
+                                                                set_invalidate_gamedays=Some(set_invalidate_gamedays)
+                                                                redirect_on_delete=false
+                                                            />
+                                                        </li>
+                                                    }
+                                                })
+                                                .collect_view()
+                                        })}
+                                    </ul>
+                                </Transition>
+                            </Show>
                         </div>
                     </Show>
                 }
@@ -110,6 +159,54 @@ async fn get_all_gamedays() -> Result<Vec<Gameday>, ServerFnError> {
             error!("Database error: {:?}", e);
             Err(ServerFnError::ServerError(
                 "Failed to get all gamedays.".to_string(),
+            ))
+        }
+    }
+}
+
+#[server]
+async fn get_all_cups() -> Result<Vec<Cup>, ServerFnError> {
+    use crate::database::get_db;
+    use tracing::{error, info};
+
+    if let Err(err) = validate_admin().await {
+        return Err(err);
+    }
+
+    let pool = get_db();
+    match sqlx::query_as!(
+        Cup,
+        r#"
+        SELECT 
+            c.cup_id, 
+            c.start_date, 
+            c.end_date,
+            c.title,
+            c.info,
+            COUNT(pc.player_id) as player_count 
+        FROM 
+            cup c
+        LEFT JOIN 
+            player_gameday pc ON c.cup_id = pc.gameday_id
+        WHERE 
+            c.start_date >= NOW() 
+        GROUP BY 
+            c.cup_id, c.start_date, c.end_date, c.title, c.info
+        ORDER BY 
+            c.start_date ASC
+        "#
+    )
+    .fetch_all(pool)
+    .await
+    {
+        Ok(results) => {
+            info!("Successfully retrieved all cups with player counts.");
+            Ok(results)
+        }
+        Err(e) => {
+            error!("Database error: {:?}", e);
+            Err(ServerFnError::ServerError(
+                "Failed to get all cups.".to_string(),
             ))
         }
     }

@@ -15,17 +15,40 @@ pub fn CupForm() -> impl IntoView {
 
     view! {
         <ActionForm action=submit>
-            <div class="flex flex-col m-2">
-                <label for="input_cup[date]">Datum</label>
-                <input type="date" required name="input_cup[date]" class="input input-bordered" />
-                <label for="input_cup[start]" class="mt-2">
-                    Start
-                </label>
-                <input type="time" required name="input_cup[start]" class="input input-bordered" />
-                <label for="input_cup[end]" class="mt-2">
-                    Slut
-                </label>
-                <input type="time" required name="input_cup[end]" class="input input-bordered" />
+            <div class="flex flex-col justify-center m-2">
+                <div class="max-w-40">
+                    <label for="input_cup[date]">Datum</label>
+                    <input
+                        type="date"
+                        required
+                        name="input_cup[date]"
+                        class="input input-bordered"
+                    />
+                    <div class="flex gap-2 mt-2">
+                        <div class="flex-col">
+                            <label for="input_cup[start]" class="">
+                                Start
+                            </label>
+                            <input
+                                type="time"
+                                required
+                                name="input_cup[start]"
+                                class="input input-bordered"
+                            />
+                        </div>
+                        <div class="flex-col">
+                            <label for="input_cup[end]" class="">
+                                Slut
+                            </label>
+                            <input
+                                type="time"
+                                required
+                                name="input_cup[end]"
+                                class="input input-bordered"
+                            />
+                        </div>
+                    </div>
+                </div>
                 <label for="input_cup[title]" class="mt-2">
                     Titel
                 </label>
@@ -45,8 +68,8 @@ pub fn CupForm() -> impl IntoView {
                     name="input_cup[info]"
                     class="textarea textarea-bordered min-h-56"
                 />
-                <button class="btn btn-success mt-4" type="submit">
-                    Lägg till cup
+                <button class="btn btn-success mt-4 w-40" type="submit">
+                    Skapa cup
                 </button>
             </div>
         </ActionForm>
