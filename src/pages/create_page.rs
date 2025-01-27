@@ -15,7 +15,9 @@ pub fn CreatePage() -> impl IntoView {
     );
 
     let (invalidate_gamedays, set_invalidate_gamedays) = signal(false);
-    let (tab_change, set_tab_change) = signal(false);
+    let (tab_change, set_tab_change) = signal(true);
+    let (show_create_day, set_show_create_day) = signal(false);
+    let (show_create_cup, set_show_create_cup) = signal(false);
     let gamedays = Resource::new(|| (), |_| async move { get_all_gamedays().await });
     let cups = Resource::new(|| (), |_| async move { get_all_cups().await });
 
@@ -40,8 +42,29 @@ pub fn CreatePage() -> impl IntoView {
                 view! {
                     <Show when=move || { is_admin } fallback=|| view! { <Redirect path="/" /> }>
                         <div class="flex flex-col w-full items-center relative">
-                            <CupForm />
-                            <DatePicker set_invalidate_gamedays />
+                            <div class="dropdown">
+                                <div tabindex="0" role="button" class="btn m-1">
+                                    Skapa event
+                                </div>
+                                <ul
+                                    tabindex="0"
+                                    class="dropdown-content menu bg-base-100 rounded-box z-[1] w-52 p-2 shadow"
+                                >
+                                    <li>
+                                        <a on:click=move |_| {
+                                            set_show_create_day.set(!show_create_day.get());
+                                            set_show_create_cup.set(false);
+                                        }>Speldag</a>
+                                    </li>
+                                    <li>
+                                        <a on:click=move |_| {
+                                            set_show_create_cup.set(!show_create_cup.get());
+                                            set_show_create_day.set(false);
+                                        }>Cup</a>
+                                    </li>
+                                </ul>
+                            </div>
+
                             <div role="tablist" class="tabs tabs-boxed m-4">
                                 <a
                                     role="tab"
@@ -64,6 +87,12 @@ pub fn CreatePage() -> impl IntoView {
                                     Cupper
                                 </a>
                             </div>
+                            <Show when=move || { show_create_day.get() }>
+                                <DatePicker set_invalidate_gamedays />
+                            </Show>
+                            <Show when=move || { show_create_cup.get() }>
+                                <CupForm />
+                            </Show>
                             <Show
                                 when=move || { tab_change.get() }
                                 fallback=move || {
