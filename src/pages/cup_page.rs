@@ -67,6 +67,15 @@ pub fn CupPage() -> impl IntoView {
                                 {move || Suspend::new(async move {
                                     let cup = cup.await;
                                     let cup_exist = cup.is_ok();
+                                    let mut info = Vec::new();
+                                    if cup_exist {
+                                        if let Some(cup_info) = cup.clone().unwrap().info {
+                                            info = cup_info
+                                                .split("\n")
+                                                .map(String::from)
+                                                .collect::<Vec<_>>();
+                                        }
+                                    }
                                     view! {
                                         <Show
                                             when=move || { cup_exist }
@@ -77,9 +86,19 @@ pub fn CupPage() -> impl IntoView {
                                             <h2 class="text-center text-bold text-3xl m-4">
                                                 {cup.clone().expect("cup should be there").title}
                                             </h2>
-                                            <p class="text-center m-3">
-                                                {cup.clone().expect("cup should be there").info}
-                                            </p>
+                                            <ul class="mb-10">
+                                                {info
+                                                    .clone()
+                                                    .into_iter()
+                                                    .map(|line| {
+                                                        view! {
+                                                            <li>
+                                                                <p class="text-center m-2">{line}</p>
+                                                            </li>
+                                                        }
+                                                    })
+                                                    .collect_view()}
+                                            </ul>
                                             <Show
                                                 when=move || { is_player_joined(cups_joined.get(), id()) }
                                                 fallback=move || {
