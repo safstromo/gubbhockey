@@ -3,7 +3,10 @@ use leptos_router::components::Redirect;
 
 use crate::{
     auth::validate_admin,
-    components::{cup_form::CupForm, date_picker::DatePicker, gameday_create::GamedayCreate},
+    components::{
+        cup_card::CupCard, cup_form::CupForm, date_picker::DatePicker,
+        gameday_create::GamedayCreate,
+    },
     models::{Cup, Gameday},
 };
 
@@ -106,7 +109,7 @@ pub fn CreatePage() -> impl IntoView {
                                                         .map(|cup| {
                                                             view! {
                                                                 <li class="my-2">
-                                                                    <p>{cup.title}</p>
+                                                                    <CupCard cup />
                                                                 </li>
                                                             }
                                                         })
