@@ -16,16 +16,18 @@ pub fn CupForm() -> impl IntoView {
     view! {
         <div class="flex flex-col items-center justify-center m-2 w-11/12">
             <ActionForm action=submit>
-                <div class="flex-col max-w-40">
-                    <label for="input_cup[date]">Datum</label>
-                    <input
-                        type="date"
-                        required
-                        name="input_cup[date]"
-                        class="input input-bordered"
-                    />
+                <div class="flex flex-col justify-center max-w-56">
+                    <div class="flex flex-col m-2 max-w-44">
+                        <label for="input_cup[date]">Datum</label>
+                        <input
+                            type="date"
+                            required
+                            name="input_cup[date]"
+                            class="input input-bordered"
+                        />
+                    </div>
                     <div class="flex gap-2 m-2">
-                        <div class="flex-col">
+                        <div class="flex flex-col">
                             <label for="input_cup[start]" class="">
                                 Start
                             </label>
@@ -36,7 +38,7 @@ pub fn CupForm() -> impl IntoView {
                                 class="input input-bordered"
                             />
                         </div>
-                        <div class="flex-col">
+                        <div class="flex flex-col">
                             <label for="input_cup[end]" class="">
                                 Slut
                             </label>
@@ -142,20 +144,22 @@ async fn insert_cup(
         r#"
         INSERT INTO cup (start_date, end_date, title, info)
         VALUES ($1, $2, $3, $4)
+        RETURNING cup_id
         "#,
         start_date,
         end_date,
         title,
         info
     )
-    .execute(pool)
+    .fetch_one(pool)
     .await
     {
-        Ok(_) => {
+        Ok(cup) => {
             info!(
                 "Cup inserted successfully! Start:{:?}, End:{:?}",
                 start_date, end_date
             );
+            leptos_axum::redirect(format!("/cup/{}", cup.cup_id).as_str());
             Ok(())
         }
         Err(e) => {
