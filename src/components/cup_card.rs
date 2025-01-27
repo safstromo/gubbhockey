@@ -24,7 +24,6 @@ pub fn CupCard(cup: Cup) -> impl IntoView {
             <button class="btn btn-error h-20 m-2 flex-col">
                 <p class="font-bold">Ändra</p>
             </button>
-
         </div>
     }
 }

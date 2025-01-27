@@ -108,7 +108,7 @@ pub fn CreatePage() -> impl IntoView {
                                                     cups.into_iter()
                                                         .map(|cup| {
                                                             view! {
-                                                                <li class="my-2">
+                                                                <li class="flex justify-center my-2">
                                                                     <CupCard cup />
                                                                 </li>
                                                             }
@@ -128,7 +128,7 @@ pub fn CreatePage() -> impl IntoView {
                                             days.into_iter()
                                                 .map(|day| {
                                                     view! {
-                                                        <li class="my-2">
+                                                        <li class="flex justify-center my-2">
                                                             <GamedayCreate
                                                                 gameday=day
                                                                 set_invalidate_gamedays=Some(set_invalidate_gamedays)
