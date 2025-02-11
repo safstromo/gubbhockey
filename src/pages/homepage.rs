@@ -1,12 +1,17 @@
 use leptos::{prelude::*, task::spawn_local};
 
 use crate::{
-    components::{gameday_card::GamedayCard, join_button::get_gamedays_by_player},
+    components::{
+        cup_card::CupCard, event_tab::EventTab, gameday_card::GamedayCard,
+        join_button::get_gamedays_by_player,
+    },
     models::{Gameday, Player},
+    pages::create_page::get_all_cups,
 };
 
 #[component]
 pub fn HomePage() -> impl IntoView {
+    let (tab_change, set_tab_change) = signal(true);
     let player =
         use_context::<Resource<Result<Player, ServerFnError>>>().expect("player context not found");
     let (gamedays_joined, set_gamedays_joined) = signal(Vec::new());
@@ -16,6 +21,8 @@ pub fn HomePage() -> impl IntoView {
         move || gamedays_joined.get(),
         |_| async move { get_next_5_gamedays().await },
     );
+
+    let cups = Resource::new(|| (), |_| async move { get_all_cups().await });
 
     Effect::new(move |_| {
         if let Some(Ok(_player_data)) = player.get() {
@@ -29,27 +36,53 @@ pub fn HomePage() -> impl IntoView {
 
     view! {
         <div class="flex flex-col w-full items-center relative">
-            <h3 class="text-xl">Speldagar</h3>
-            <Transition fallback=move || view! { <p>"Loading..."</p> }>
-                <ul class="flex flex-col items-center w-11/12">
-                    {move || Suspend::new(async move {
-                        let days = gamedays.await.expect("No gamedays found");
-                        days.into_iter()
-                            .map(|day| {
-                                view! {
-                                    <li class="my-2">
-                                        <GamedayCard
-                                            gamedays_joined=gamedays_joined
-                                            set_gamedays_joined=set_gamedays_joined
-                                            gameday=day
-                                        />
-                                    </li>
-                                }
-                            })
-                            .collect_view()
-                    })}
-                </ul>
-            </Transition>
+            <EventTab tab_change set_tab_change />
+            <Show
+                when=move || { tab_change.get() }
+                fallback=move || {
+                    view! {
+                        <Transition fallback=move || view! { <p>"Loading..."</p> }>
+                            <h3 class="text-center text-xl mt-2">Kommande cupper</h3>
+                            <ul class="flex flex-col items-center w-11/12">
+                                {move || Suspend::new(async move {
+                                    let cups = cups.await.expect("No cups found");
+                                    cups.into_iter()
+                                        .map(|cup| {
+                                            view! {
+                                                <li class="flex justify-center my-2">
+                                                    <CupCard cup edit_button=false />
+                                                </li>
+                                            }
+                                        })
+                                        .collect_view()
+                                })}
+                            </ul>
+                        </Transition>
+                    }
+                }
+            >
+                <Transition fallback=move || view! { <p>"Loading..."</p> }>
+                    <h3 class="text-xl">Speldagar</h3>
+                    <ul class="flex flex-col items-center w-11/12">
+                        {move || Suspend::new(async move {
+                            let days = gamedays.await.expect("No gamedays found");
+                            days.into_iter()
+                                .map(|day| {
+                                    view! {
+                                        <li class="my-2">
+                                            <GamedayCard
+                                                gamedays_joined=gamedays_joined
+                                                set_gamedays_joined=set_gamedays_joined
+                                                gameday=day
+                                            />
+                                        </li>
+                                    }
+                                })
+                                .collect_view()
+                        })}
+                    </ul>
+                </Transition>
+            </Show>
         </div>
     }
 }

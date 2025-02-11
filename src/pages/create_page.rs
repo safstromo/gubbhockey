@@ -175,7 +175,7 @@ async fn get_all_gamedays() -> Result<Vec<Gameday>, ServerFnError> {
 }
 
 #[server]
-async fn get_all_cups() -> Result<Vec<Cup>, ServerFnError> {
+pub async fn get_all_cups() -> Result<Vec<Cup>, ServerFnError> {
     use crate::database::get_db;
     use tracing::{error, info};
 
