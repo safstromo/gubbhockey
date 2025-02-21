@@ -2,7 +2,10 @@ use leptos::prelude::*;
 use leptos_router::hooks::use_params;
 use leptos_router::params::Params;
 
-use crate::{components::not_found::NotFound, models::Cup};
+use crate::{
+    components::{loading::Loading, not_found::NotFound},
+    models::Cup,
+};
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
@@ -42,7 +45,7 @@ pub fn EditCupPage() -> impl IntoView {
     view! {
         <div class="flex flex-col items-center justify-center m-2 w-full">
             <Transition fallback=move || {
-                view! { <p>"Loading..."</p> }
+                view! { <Loading /> }
             }>
                 {move || Suspend::new(async move {
                     let cup = cup.await;

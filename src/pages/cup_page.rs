@@ -5,7 +5,8 @@ use leptos_router::params::Params;
 use crate::{
     auth::get_auth_url,
     components::{
-        join_cup_form::JoinCupForm, leave_cup_button::LeaveCupButton, not_found::NotFound,
+        join_cup_form::JoinCupForm, leave_cup_button::LeaveCupButton, loading::Loading,
+        not_found::NotFound,
     },
     models::{Cup, CupPlayer, Player},
 };
@@ -52,9 +53,9 @@ pub fn CupPage() -> impl IntoView {
     });
 
     view! {
-        <div class="flex flex-col w-full items-center relative">
+        <div class="flex flex-col w-full items-center justify-center relative">
             <Transition fallback=move || {
-                view! { <p>"Loading..."</p> }
+                view! { <Loading /> }
             }>
                 {move || Suspend::new(async move {
                     let cup = cup.await;
@@ -138,7 +139,7 @@ pub fn CupPage() -> impl IntoView {
             </Transition>
             <h2 class="text-center text-bold text-2xl mt-6">"Anmälda spelare"</h2>
             <div class="flex md:flex-col justify-around w-full">
-                <Transition fallback=move || view! { <p>"Loading..."</p> }>
+                <Transition fallback=move || view! { <Loading /> }>
 
                     <div class="flex flex-col justify-center">
                         <h3 class="text-center text-bold underline text-xl mt-6 mb-2">"Backar"</h3>
@@ -161,7 +162,7 @@ pub fn CupPage() -> impl IntoView {
                         </ul>
                     </div>
                 </Transition>
-                <Transition fallback=move || view! { <p>"Loading..."</p> }>
+                <Transition fallback=move || view! { <Loading /> }>
                     <div class="flex flex-col justify-center">
                         <h3 class="text-center text-bold underline text-xl mt-6 mb-2">
                             "Forwards"
@@ -186,7 +187,7 @@ pub fn CupPage() -> impl IntoView {
                     </div>
                 </Transition>
             </div>
-            <Transition fallback=move || view! { <p>"Loading..."</p> }>
+            <Transition fallback=move || view! { <Loading /> }>
                 <div class="flex flex-col justify-center">
                     <h3 class="text-center text-bold underline text-xl mt-6 mb-2">"Målvakter"</h3>
                     <ul class="flex flex-col justify-center ">

@@ -3,7 +3,7 @@ use leptos::{prelude::*, task::spawn_local};
 use crate::{
     components::{
         cup_card::CupCard, event_tab::EventTab, gameday_card::GamedayCard,
-        join_button::get_gamedays_by_player,
+        join_button::get_gamedays_by_player, loading::Loading,
     },
     models::{Gameday, Player},
     pages::create_page::get_all_cups,
@@ -41,7 +41,7 @@ pub fn HomePage() -> impl IntoView {
                 when=move || { tab_change.get() }
                 fallback=move || {
                     view! {
-                        <Transition fallback=move || view! { <p>"Loading..."</p> }>
+                        <Transition fallback=move || view! { <Loading /> }>
                             <h3 class="text-center text-xl mt-2">"Kommande cupper/matcher"</h3>
                             <ul class="flex flex-col items-center w-11/12">
                                 {move || Suspend::new(async move {
@@ -61,7 +61,7 @@ pub fn HomePage() -> impl IntoView {
                     }
                 }
             >
-                <Transition fallback=move || view! { <p>"Loading..."</p> }>
+                <Transition fallback=move || view! { <Loading /> }>
                     <h3 class="text-xl">Speldagar</h3>
                     <ul class="flex flex-col items-center w-11/12">
                         {move || Suspend::new(async move {

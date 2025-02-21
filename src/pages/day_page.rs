@@ -64,7 +64,7 @@ pub fn DayPage() -> impl IntoView {
                             fallback=|| view! { <Redirect path="/" /> }
                         >
                             <Transition fallback=move || {
-                                view! { <p>"Loading..."</p> }
+                                view! { <Loading /> }
                             }>
                                 {move || Suspend::new(async move {
                                     let day = gameday.await;
@@ -87,7 +87,7 @@ pub fn DayPage() -> impl IntoView {
 
                             </Transition>
                             <h2 class="text-center text-bold text-2xl mt-6">"Anmälda spelare"</h2>
-                            <Transition fallback=move || view! { <p>"Loading..."</p> }>
+                            <Transition fallback=move || view! { <Loading /> }>
                                 <h3 class="text-center text-bold underline text-xl mt-6 mb-2">
                                     "Målvakter"
                                 </h3>
@@ -109,7 +109,7 @@ pub fn DayPage() -> impl IntoView {
                                     })}
                                 </ul>
                             </Transition>
-                            <Transition fallback=move || view! { <p>"Loading..."</p> }>
+                            <Transition fallback=move || view! { <Loading /> }>
                                 <h3 class="text-center text-bold underline text-xl mt-6 mb-2">
                                     "Utespelare"
                                 </h3>

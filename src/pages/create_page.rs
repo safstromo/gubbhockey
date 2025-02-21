@@ -5,7 +5,7 @@ use crate::{
     auth::validate_admin,
     components::{
         cup_card::CupCard, cup_form::CupForm, date_picker::DatePicker, event_tab::EventTab,
-        gameday_create::GamedayCreate,
+        gameday_create::GamedayCreate, loading::Loading,
     },
     models::{Cup, Gameday},
 };
@@ -80,7 +80,7 @@ pub fn CreatePage() -> impl IntoView {
                                 when=move || { tab_change.get() }
                                 fallback=move || {
                                     view! {
-                                        <Transition fallback=move || view! { <p>"Loading..."</p> }>
+                                        <Transition fallback=move || view! { <Loading /> }>
                                             <h3 class="text-center text-xl mt-2">Kommande cupper</h3>
                                             <ul class="flex flex-col items-center w-11/12">
                                                 {move || Suspend::new(async move {
@@ -100,7 +100,7 @@ pub fn CreatePage() -> impl IntoView {
                                     }
                                 }
                             >
-                                <Transition fallback=move || view! { <p>"Loading..."</p> }>
+                                <Transition fallback=move || view! { <Loading /> }>
                                     <h3 class="text-center text-xl mt-2">Kommande Speldagar</h3>
                                     <ul class="flex flex-col items-center w-11/12">
                                         {move || Suspend::new(async move {
