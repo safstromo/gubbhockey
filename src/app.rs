@@ -12,7 +12,8 @@ use crate::{
     models::{GlobalState, GlobalStateStoreFields},
     pages::{
         auth_page::AuthPage, create_page::CreatePage, cup_page::CupPage, day_page::DayPage,
-        homepage::HomePage, profile_page::ProfilePage, terms_page::TermsPage,
+        edit_cup_page::EditCupPage, homepage::HomePage, profile_page::ProfilePage,
+        terms_page::TermsPage,
     },
 };
 
@@ -86,6 +87,7 @@ pub fn App() -> impl IntoView {
                             <Route path=path!("/create") view=CreatePage />
                             <Route path=path!("/day/:id") view=DayPage />
                             <Route path=path!("/cup/:id") view=CupPage />
+                            <Route path=path!("/cup/edit/:id") view=EditCupPage />
                             <Route path=path!("/terms") view=TermsPage />
                             <Route path=path!("/policy") view=TermsPage />
                             <Route path=path!("/profile") view=ProfilePage />

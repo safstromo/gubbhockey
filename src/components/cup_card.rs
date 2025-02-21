@@ -33,9 +33,11 @@ pub fn CupCard(cup: Cup, edit_button: bool) -> impl IntoView {
                     }
                 }
             >
-                <button class="btn btn-error h-20 m-2 flex-col">
-                    <p class="font-bold">Ändra</p>
-                </button>
+                <A href=format!("/cup/edit/{}", cup.cup_id)>
+                    <button class="btn btn-error h-20 m-2 flex-col">
+                        <p class="font-bold">Ändra</p>
+                    </button>
+                </A>
             </Show>
         </div>
     }
