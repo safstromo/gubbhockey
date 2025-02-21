@@ -1,7 +1,9 @@
 use leptos::{prelude::*, task::spawn_local};
-use leptos_router::{components::Redirect, hooks::use_params, params::Params};
+use leptos_router::hooks::use_params;
+use leptos_router::params::Params;
 
 use crate::{
+    auth::get_auth_url,
     components::{
         join_cup_form::JoinCupForm, leave_cup_button::LeaveCupButton, not_found::NotFound,
     },
@@ -51,54 +53,62 @@ pub fn CupPage() -> impl IntoView {
 
     view! {
         <div class="flex flex-col w-full items-center relative">
-            <Suspense fallback=|| {
-                view! { <NotFound /> }
+            <Transition fallback=move || {
+                view! { <p>"Loading..."</p> }
             }>
                 {move || Suspend::new(async move {
-                    let player_loggedin = player.await;
+                    let cup = cup.await;
+                    let cup_exist = cup.is_ok();
+                    let mut info = Vec::new();
+                    if cup_exist {
+                        if let Some(cup_info) = cup.clone().unwrap().info {
+                            info = cup_info.split("\n").map(String::from).collect::<Vec<_>>();
+                        }
+                    }
                     view! {
                         <Show
-                            when=move || { player_loggedin.is_ok() }
-                            fallback=|| view! { <Redirect path="/" /> }
+                            when=move || { cup_exist }
+                            fallback=|| {
+                                view! { <NotFound /> }
+                            }
                         >
-                            <Transition fallback=move || {
-                                view! { <p>"Loading..."</p> }
-                            }>
-                                {move || Suspend::new(async move {
-                                    let cup = cup.await;
-                                    let cup_exist = cup.is_ok();
-                                    let mut info = Vec::new();
-                                    if cup_exist {
-                                        if let Some(cup_info) = cup.clone().unwrap().info {
-                                            info = cup_info
-                                                .split("\n")
-                                                .map(String::from)
-                                                .collect::<Vec<_>>();
+                            <h2 class="text-center text-bold text-3xl m-4">
+                                {cup.clone().expect("cup should be there").title}
+                            </h2>
+                            <ul class="mb-10">
+                                {info
+                                    .clone()
+                                    .into_iter()
+                                    .map(|line| {
+                                        view! {
+                                            <li>
+                                                <p class="text-center m-2">{line}</p>
+                                            </li>
                                         }
-                                    }
+                                    })
+                                    .collect_view()}
+                            </ul>
+                            <Suspense>
+                                {move || Suspend::new(async move {
+                                    let player_loggedin = player.await;
                                     view! {
                                         <Show
-                                            when=move || { cup_exist }
+                                            when=move || { player_loggedin.is_ok() }
                                             fallback=|| {
-                                                view! { <NotFound /> }
+                                                view! {
+                                                    <button
+                                                        class="underline"
+                                                        on:click=move |_| {
+                                                            spawn_local(async {
+                                                                let _ = get_auth_url().await;
+                                                            });
+                                                        }
+                                                    >
+                                                        Logga in för anmälan
+                                                    </button>
+                                                }
                                             }
                                         >
-                                            <h2 class="text-center text-bold text-3xl m-4">
-                                                {cup.clone().expect("cup should be there").title}
-                                            </h2>
-                                            <ul class="mb-10">
-                                                {info
-                                                    .clone()
-                                                    .into_iter()
-                                                    .map(|line| {
-                                                        view! {
-                                                            <li>
-                                                                <p class="text-center m-2">{line}</p>
-                                                            </li>
-                                                        }
-                                                    })
-                                                    .collect_view()}
-                                            </ul>
                                             <Show
                                                 when=move || { is_player_joined(cups_joined.get(), id()) }
                                                 fallback=move || {
@@ -121,87 +131,83 @@ pub fn CupPage() -> impl IntoView {
                                         </Show>
                                     }
                                 })}
-                            </Transition>
-                            <h2 class="text-center text-bold text-2xl mt-6">"Anmälda spelare"</h2>
-                            <div class="flex md:flex-col justify-around w-full">
-                                <Transition fallback=move || view! { <p>"Loading..."</p> }>
-
-                                    <div class="flex flex-col justify-center">
-                                        <h3 class="text-center text-bold underline text-xl mt-6 mb-2">
-                                            "Backar"
-                                        </h3>
-                                        <ul class="flex flex-col items-center">
-                                            {move || Suspend::new(async move {
-                                                let players_vec = players.await.expect("No players found");
-                                                players_vec
-                                                    .clone()
-                                                    .into_iter()
-                                                    .filter(|player| player.position == *"defender")
-                                                    .map(|player| {
-                                                        view! {
-                                                            <li class="my-1">
-                                                                <p class="text-center text-xs">{player.name}</p>
-                                                            </li>
-                                                        }
-                                                    })
-                                                    .collect_view()
-                                            })}
-                                        </ul>
-                                    </div>
-                                </Transition>
-                                <Transition fallback=move || view! { <p>"Loading..."</p> }>
-                                    <div class="flex flex-col justify-center">
-                                        <h3 class="text-center text-bold underline text-xl mt-6 mb-2">
-                                            "Forwards"
-                                        </h3>
-                                        <ul class="flex flex-col justify-center">
-                                            {move || Suspend::new(async move {
-                                                let players_vec = players.await.expect("No players found");
-                                                players_vec
-                                                    .clone()
-                                                    .into_iter()
-                                                    .filter(|player| player.position == *"forward")
-                                                    .map(|player| {
-                                                        view! {
-                                                            <li class="my-1">
-                                                                <p class="text-center text-xs">{player.name}</p>
-                                                            </li>
-                                                        }
-                                                    })
-                                                    .collect_view()
-                                            })}
-                                        </ul>
-                                    </div>
-                                </Transition>
-                            </div>
-                            <Transition fallback=move || view! { <p>"Loading..."</p> }>
-                                <div class="flex flex-col justify-center">
-                                    <h3 class="text-center text-bold underline text-xl mt-6 mb-2">
-                                        "Målvakter"
-                                    </h3>
-                                    <ul class="flex flex-col justify-center ">
-                                        {move || Suspend::new(async move {
-                                            let players_vec = players.await.expect("No players found");
-                                            players_vec
-                                                .clone()
-                                                .into_iter()
-                                                .filter(|player| player.position == *"goalkeeper")
-                                                .map(|player| {
-                                                    view! {
-                                                        <li class="my-1">
-                                                            <p class="text-center text-xs">{player.name}</p>
-                                                        </li>
-                                                    }
-                                                })
-                                                .collect_view()
-                                        })}
-                                    </ul>
-                                </div>
-                            </Transition>
+                            </Suspense>
                         </Show>
                     }
                 })}
-            </Suspense>
+            </Transition>
+            <h2 class="text-center text-bold text-2xl mt-6">"Anmälda spelare"</h2>
+            <div class="flex md:flex-col justify-around w-full">
+                <Transition fallback=move || view! { <p>"Loading..."</p> }>
+
+                    <div class="flex flex-col justify-center">
+                        <h3 class="text-center text-bold underline text-xl mt-6 mb-2">"Backar"</h3>
+                        <ul class="flex flex-col items-center">
+                            {move || Suspend::new(async move {
+                                let players_vec = players.await.expect("No players found");
+                                players_vec
+                                    .clone()
+                                    .into_iter()
+                                    .filter(|player| player.position == *"defender")
+                                    .map(|player| {
+                                        view! {
+                                            <li class="my-1">
+                                                <p class="text-center text-xs">{player.name}</p>
+                                            </li>
+                                        }
+                                    })
+                                    .collect_view()
+                            })}
+                        </ul>
+                    </div>
+                </Transition>
+                <Transition fallback=move || view! { <p>"Loading..."</p> }>
+                    <div class="flex flex-col justify-center">
+                        <h3 class="text-center text-bold underline text-xl mt-6 mb-2">
+                            "Forwards"
+                        </h3>
+                        <ul class="flex flex-col justify-center">
+                            {move || Suspend::new(async move {
+                                let players_vec = players.await.expect("No players found");
+                                players_vec
+                                    .clone()
+                                    .into_iter()
+                                    .filter(|player| player.position == *"forward")
+                                    .map(|player| {
+                                        view! {
+                                            <li class="my-1">
+                                                <p class="text-center text-xs">{player.name}</p>
+                                            </li>
+                                        }
+                                    })
+                                    .collect_view()
+                            })}
+                        </ul>
+                    </div>
+                </Transition>
+            </div>
+            <Transition fallback=move || view! { <p>"Loading..."</p> }>
+                <div class="flex flex-col justify-center">
+                    <h3 class="text-center text-bold underline text-xl mt-6 mb-2">"Målvakter"</h3>
+                    <ul class="flex flex-col justify-center ">
+                        {move || Suspend::new(async move {
+                            let players_vec = players.await.expect("No players found");
+                            players_vec
+                                .clone()
+                                .into_iter()
+                                .filter(|player| player.position == *"goalkeeper")
+                                .map(|player| {
+                                    view! {
+                                        <li class="my-1">
+                                            <p class="text-center text-xs">{player.name}</p>
+                                        </li>
+                                    }
+                                })
+                                .collect_view()
+                        })}
+                    </ul>
+                </div>
+            </Transition>
         </div>
     }
 }

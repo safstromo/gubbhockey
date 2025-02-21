@@ -42,7 +42,7 @@ pub fn HomePage() -> impl IntoView {
                 fallback=move || {
                     view! {
                         <Transition fallback=move || view! { <p>"Loading..."</p> }>
-                            <h3 class="text-center text-xl mt-2">Kommande cupper</h3>
+                            <h3 class="text-center text-xl mt-2">"Kommande cupper/matcher"</h3>
                             <ul class="flex flex-col items-center w-11/12">
                                 {move || Suspend::new(async move {
                                     let cups = cups.await.expect("No cups found");

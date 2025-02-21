@@ -179,10 +179,6 @@ pub async fn get_all_cups() -> Result<Vec<Cup>, ServerFnError> {
     use crate::database::get_db;
     use tracing::{error, info};
 
-    if let Err(err) = validate_admin().await {
-        return Err(err);
-    }
-
     let pool = get_db();
     match sqlx::query_as!(
         Cup,

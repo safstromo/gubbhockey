@@ -16,13 +16,13 @@ pub fn EventTab(tab_change: ReadSignal<bool>, set_tab_change: WriteSignal<bool>)
             </a>
             <a
                 role="tab"
-                class="tab "
+                class="tab"
                 class:tab-active=move || !tab_change.get()
                 on:click=move |_| {
                     set_tab_change.set(!tab_change.get());
                 }
             >
-                Cupper
+                "Cupper/Matcher"
             </a>
         </div>
     }
