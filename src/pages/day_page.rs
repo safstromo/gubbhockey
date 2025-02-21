@@ -3,7 +3,8 @@ use leptos_router::{components::Redirect, hooks::use_params, params::Params};
 
 use crate::{
     components::{
-        gameday_card::GamedayCard, join_button::get_gamedays_by_player, not_found::NotFound,
+        gameday_card::GamedayCard, join_button::get_gamedays_by_player, loading::Loading,
+        not_found::NotFound,
     },
     models::{get_players_by_gameday, Gameday, Player},
 };

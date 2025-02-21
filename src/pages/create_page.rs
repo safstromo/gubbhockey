@@ -195,7 +195,7 @@ pub async fn get_all_cups() -> Result<Vec<Cup>, ServerFnError> {
         FROM 
             cup c
         LEFT JOIN 
-            player_gameday pc ON c.cup_id = pc.gameday_id
+            player_cup pc ON c.cup_id = pc.cup_id
         WHERE 
             c.start_date >= NOW() 
         GROUP BY 
