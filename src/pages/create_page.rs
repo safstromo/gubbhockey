@@ -57,13 +57,15 @@ pub fn CreatePage() -> impl IntoView {
                                         <a on:click=move |_| {
                                             set_show_create_day.set(!show_create_day.get());
                                             set_show_create_cup.set(false);
+                                            set_tab_change.set(true);
                                         }>Speldag</a>
                                     </li>
                                     <li>
                                         <a on:click=move |_| {
                                             set_show_create_cup.set(!show_create_cup.get());
                                             set_show_create_day.set(false);
-                                        }>Cup</a>
+                                            set_tab_change.set(false);
+                                        }>"Cup/Match"</a>
                                     </li>
                                 </ul>
                             </div>

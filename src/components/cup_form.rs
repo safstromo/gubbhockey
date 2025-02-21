@@ -1,22 +1,15 @@
 use chrono::{DateTime, Utc};
-use leptos::{logging::log, prelude::*};
+use leptos::prelude::*;
 use serde::{Deserialize, Serialize};
 
 #[component]
 pub fn CupForm() -> impl IntoView {
     let submit = ServerAction::<AddCup>::new();
 
-    let value = submit.value();
-    Effect::new(move |_| {
-        if value.get().is_some() {
-            log!("refetch cups")
-        }
-    });
-
     view! {
         <div class="flex flex-col items-center justify-center m-2 w-11/12">
             <ActionForm action=submit>
-                <div class="flex flex-col justify-center max-w-56">
+                <div class="flex flex-col justify-center">
                     <div class="flex flex-col m-2 max-w-44">
                         <label for="input_cup[date]">Datum</label>
                         <input
@@ -74,7 +67,7 @@ pub fn CupForm() -> impl IntoView {
                         class="textarea textarea-bordered min-h-56"
                     />
                 </div>
-                <div class="flex justify-center m-2">
+                <div class="flex justify-center m-4">
                     <button class="btn btn-success w-40" type="submit">
                         Skapa cup
                     </button>
