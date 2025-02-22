@@ -1,3 +1,4 @@
+pub mod admin_page;
 pub mod auth_page;
 pub mod create_page;
 pub mod cup_page;

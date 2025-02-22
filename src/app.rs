@@ -11,9 +11,9 @@ use crate::{
     components::{footer::Footer, header::Header, not_found::NotFound},
     models::{GlobalState, GlobalStateStoreFields},
     pages::{
-        auth_page::AuthPage, create_page::CreatePage, cup_page::CupPage, day_page::DayPage,
-        edit_cup_page::EditCupPage, homepage::HomePage, profile_page::ProfilePage,
-        terms_page::TermsPage,
+        admin_page::AdminPage, auth_page::AuthPage, create_page::CreatePage, cup_page::CupPage,
+        day_page::DayPage, edit_cup_page::EditCupPage, homepage::HomePage,
+        profile_page::ProfilePage, terms_page::TermsPage,
     },
 };
 
@@ -85,6 +85,7 @@ pub fn App() -> impl IntoView {
                             <Route path=StaticSegment("") view=HomePage />
                             <Route path=path!("/auth") view=AuthPage />
                             <Route path=path!("/create") view=CreatePage />
+                            <Route path=path!("/admin") view=AdminPage />
                             <Route path=path!("/day/:id") view=DayPage />
                             <Route path=path!("/cup/:id") view=CupPage />
                             <Route path=path!("/cup/edit/:id") view=EditCupPage />
