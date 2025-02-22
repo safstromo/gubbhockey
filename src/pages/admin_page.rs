@@ -10,6 +10,7 @@ pub fn AdminPage() -> impl IntoView {
         |_| async move { validate_admin().await.unwrap_or(false) },
     );
     let add_admin = ServerAction::<AddAdmin>::new();
+    let remove_admin = ServerAction::<RemoveAdmin>::new();
 
     let (invalidate_gamedays, set_invalidate_gamedays) = signal(false);
     let players = Resource::new(|| (), |_| async move { get_all_players().await });
@@ -84,7 +85,30 @@ pub fn AdminPage() -> impl IntoView {
                                                 .map(|user| {
                                                     view! {
                                                         <li class="flex justify-center my-2">
-                                                            <p>{user.name}</p>
+                                                            <ActionForm action=remove_admin>
+                                                                <p>{user.name}</p>
+                                                                <button
+                                                                    type="submit"
+                                                                    class="btn btn-square btn-outline ml-2"
+                                                                    value=user.player_id
+                                                                    name="player_id"
+                                                                >
+                                                                    <svg
+                                                                        xmlns="http://www.w3.org/2000/svg"
+                                                                        class="h-4 w-4"
+                                                                        fill="none"
+                                                                        viewBox="0 0 24 24"
+                                                                        stroke="currentColor"
+                                                                    >
+                                                                        <path
+                                                                            stroke-linecap="round"
+                                                                            stroke-linejoin="round"
+                                                                            stroke-width="2"
+                                                                            d="M6 18L18 6M6 6l12 12"
+                                                                        />
+                                                                    </svg>
+                                                                </button>
+                                                            </ActionForm>
                                                         </li>
                                                     }
                                                 })
@@ -186,6 +210,40 @@ async fn add_admin(player_id: i32) -> Result<(), ServerFnError> {
             error!("Database error: {:?}", e);
             Err(ServerFnError::ServerError(
                 "Failed to add admin.".to_string(),
+            ))
+        }
+    }
+}
+
+#[server]
+async fn remove_admin(player_id: i32) -> Result<(), ServerFnError> {
+    use crate::database::get_db;
+    use tracing::{error, info};
+
+    if let Err(err) = validate_admin().await {
+        return Err(err);
+    }
+
+    let pool = get_db();
+    match sqlx::query!(
+        r#"
+        UPDATE player
+        SET access_group = 'user'
+        WHERE player_id = $1
+        "#,
+        player_id
+    )
+    .execute(pool)
+    .await
+    {
+        Ok(_) => {
+            info!("Successfully removed admin.");
+            Ok(())
+        }
+        Err(e) => {
+            error!("Database error: {:?}", e);
+            Err(ServerFnError::ServerError(
+                "Failed to remove admin.".to_string(),
             ))
         }
     }
