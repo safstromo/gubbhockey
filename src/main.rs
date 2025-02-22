@@ -1,7 +1,7 @@
 #[cfg(feature = "ssr")]
 use leptos::prelude::*;
 #[cfg(feature = "ssr")]
-use tracing::{error, info, Level};
+use tracing::{error, info};
 
 #[cfg(feature = "ssr")]
 #[tokio::main]
@@ -16,14 +16,14 @@ async fn main() {
     use tokio_cron_scheduler::Job;
     use tokio_cron_scheduler::JobScheduler;
     use tower_cookies::CookieManagerLayer;
-    use tracing_subscriber::FmtSubscriber;
+    use tracing_subscriber::{EnvFilter, FmtSubscriber};
 
     dotenv().ok();
 
     let subscriber = FmtSubscriber::builder()
         // all spans/events with a level higher than TRACE (e.g, debug, info, warn, etc.)
         // will be written to stdout.
-        .with_max_level(Level::INFO)
+        .with_env_filter(EnvFilter::from_default_env())
         .finish();
 
     tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");

@@ -1,5 +1,4 @@
 use crate::models::{PkceStore, Player};
-use http::StatusCode;
 use leptos::prelude::*;
 use leptos::{prelude::ServerFnError, server};
 use std::env;
