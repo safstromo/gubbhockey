@@ -1,4 +1,5 @@
 use crate::models::{PkceStore, Player};
+use http::StatusCode;
 use leptos::prelude::*;
 use leptos::{prelude::ServerFnError, server};
 use std::env;
@@ -80,8 +81,6 @@ pub async fn user_from_session() -> Result<Player, ServerFnError> {
     }
 
     error!("No session cookie found");
-    let opts = expect_context::<leptos_axum::ResponseOptions>();
-    opts.set_status(StatusCode::NOT_FOUND);
     return Err(ServerFnError::ServerError("No user found".to_string()));
 }
 
