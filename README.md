@@ -1,12 +1,15 @@
 # gubbhockey.com
 
-This is the website (gubbhockey.com)[gubbhockey.com]
+This is the website [gubbhockey.com](https://gubbhockey.com)
+
 Used for booking and planning senior hockey training sessions.
+
 It uses OIDC with Auth0 for simple login.
 
+![image](https://github.com/user-attachments/assets/4085f40b-c3bb-472f-9a9a-ba76da48e72a)
 
 ## Create a .env
-
+```
 DATABASE_URL="postgresql://develop:develop@localhost:5432/gubbhockey"
 OAUTH_CLIENT_ID="clientid"
 OAUTH_CLIENT_SECRET="secred"
@@ -14,6 +17,7 @@ OAUTH_AUTH_URL="https://url.com/authorize"
 OAUTH_TOKEN_URL="https://url.com/oauth/token"
 OAUTH_REDIRECT_URL="http://localhost:3000/auth"
 OAUTH_LOGOUT_URL="https://url.com/logout"
+```
 
 ## Running your project
 
