@@ -1,35 +1,9 @@
-<picture>
-    <source srcset="https://raw.githubusercontent.com/leptos-rs/leptos/main/docs/logos/Leptos_logo_Solid_White.svg" media="(prefers-color-scheme: dark)">
-    <img src="https://raw.githubusercontent.com/leptos-rs/leptos/main/docs/logos/Leptos_logo_RGB.svg" alt="Leptos Logo">
-</picture>
+# gubbhockey.com
 
-# Leptos Axum Starter Template
+This is the website (gubbhockey.com)[gubbhockey.com]
+Used for booking and planning senior hockey training sessions.
+It uses OIDC with Auth0 for simple login.
 
-This is a template for use with the [Leptos](https://github.com/leptos-rs/leptos) web framework and the [cargo-leptos](https://github.com/akesson/cargo-leptos) tool using [Axum](https://github.com/tokio-rs/axum).
-
-## Creating your template repo
-
-If you don't have `cargo-leptos` installed you can install it with
-
-```bash
-cargo install cargo-leptos --locked
-```
-
-Then run
-
-```bash
-cargo leptos new --git https://github.com/leptos-rs/start-axum-0.7
-```
-
-to generate a new project template.
-
-```bash
-cd gubbhockey
-```
-
-to go to your newly created project.  
-Feel free to explore the project structure, but the best place to start with your application code is in `src/app.rs`.  
-Addtionally, Cargo.toml may need updating as new versions of the dependencies are released, especially if things are not working after a `cargo update`.
 
 ## Create a .env
 
@@ -49,14 +23,12 @@ cargo leptos watch
 
 ## Installing Additional Tools
 
-By default, `cargo-leptos` uses `nightly` Rust, `cargo-generate`, and `sass`. If you run into any trouble, you may need to install one or more of these tools.
+By default, `cargo-leptos` uses `nightly` Rust. If you run into any trouble, you may need to install one or more of these tools.
 
 1. `rustup toolchain install nightly --allow-downgrade` - make sure you have Rust nightly
 2. `rustup target add wasm32-unknown-unknown` - add the ability to compile Rust to WebAssembly
-3. `cargo install cargo-generate` - install `cargo-generate` binary (should be installed automatically in future)
-4. `npm install -g sass` - install `dart-sass` (should be optional in future
-5. Run `npm install` in end2end subdirectory before test
-6. Run npm i -D daisyui@latest to install daisyui
+3. ```cargo install cargo-leptos``` - Install cargo leptos
+4. Run ```npm i -D daisyui@latest``` to install daisyui
 
 ## Compiling for Release
 
@@ -66,59 +38,23 @@ cargo leptos build --release
 
 Will generate your server binary in target/server/release and your site package in target/site
 
-## Testing Your Project
 
-```bash
-cargo leptos end-to-end
-```
+## Quick deploy steps
 
-```bash
-cargo leptos end-to-end --release
-```
+### Building dockerfile and copy to server
 
-Cargo-leptos uses Playwright as the end-to-end test tool.  
-Tests are located in end2end/tests directory.
+1. Run ```cargo leptos build --release```
 
-## Executing a Server on a Remote Machine Without the Toolchain
+2. Add envstuff to dockerfile
 
-After running a `cargo leptos build --release` the minimum files needed are:
+3. run ```docker build -t gubbhockey```
 
-1. The server binary located in `target/server/release`
-2. The `site` directory and all files within located in `target/site`
+4. export image ```docker save -o gubbhockey_image.tar gubbhockey:latest```
 
-Copy these files to your remote server. The directory structure should be:
+5. Move image to server with scp ```scp gubbhockey_image.tar user@ip:gubbhockey/```
 
-```text
-gubbhockey
-site/
-```
+6. Import image  ```docker load -i gubbhockey_image.tar```
 
-Set the following environment variables (updating for your project as needed):
 
-```sh
-export LEPTOS_OUTPUT_NAME="gubbhockey"
-export LEPTOS_SITE_ROOT="site"
-export LEPTOS_SITE_PKG_DIR="pkg"
-export LEPTOS_SITE_ADDR="127.0.0.1:3000"
-export LEPTOS_RELOAD_PORT="3001"
-```
-
-Finally, run the server binary.
-
-## Licensing
-
-This template itself is released under the Unlicense. You should replace the LICENSE for your own application with an appropriate license if you plan to release it publicly.
-
-Building dockerfile
-
-Run cargo leptos build --release
-
-add envstuff to dockerfile
-
-run docker build -t gubbhockey
-
-export image: docker save -o gubbhockey_image.tar gubbhockey:latest
-
-move to server with scp: scp gubbhockey_image.tar user@ip:gubbhockey/
-
-import image: docker load -i gubbhockey_image.tar
+## TODO:
+- Remove hardcoded envs in dockerfile and import from .env, or just create a docker-compose instead.
